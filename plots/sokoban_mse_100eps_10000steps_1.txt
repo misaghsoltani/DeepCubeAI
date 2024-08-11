@@ -1,0 +1,93 @@
+
+--------------------------------------------
+Arguments being used:
+--------------------------------------------
+--env:		sokoban
+--model_test_data:		data/sokoban/model_test/0.1k_stp10k_env_test_data.pkl
+--env_model_dir_disc:		saved_env_models/sokoban_disc
+--env_model_dir_cont:		saved_env_models/sokoban_cont
+--num_episodes:		100
+--num_steps:		10000
+--print_interval:		500
+--save_dir:		/work/msoltani/projects/DeepCubeAI_draft/DeepCubeConstrained_final_0.5
+--save_pdf:		True
+--------------------------------------------
+
+Episodes 0-100 (100 episodes, 10000 steps)
+
+Testing the discrete model:
+step: 0, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 500, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 1000, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 1500, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 2000, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 2500, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 3000, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 3500, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 4000, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 4500, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 5000, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 5500, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 6000, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 6500, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 7000, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 7500, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 8000, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 8500, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 9000, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 9500, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+step: 9999, eq_bit: 100.00%, eq_bit_min: 100.00%, eq: 100.00%, mse: 1.54E-10, all (so far/this step): 1.00/1
+eq_bit_min (all): 100.00%
+10000 out of 10000 have all match
+
+Testing the continuous model:
+step: 0, mse(so far/this step): 8.64e-10/8.64e-10
+step: 500, mse(so far/this step): 8.67e-10/9.83e-10
+step: 1000, mse(so far/this step): 8.40e-10/8.93e-10
+step: 1500, mse(so far/this step): 8.34e-10/7.79e-10
+step: 2000, mse(so far/this step): 8.32e-10/7.78e-10
+step: 2500, mse(so far/this step): 8.31e-10/8.11e-10
+step: 3000, mse(so far/this step): 8.28e-10/7.42e-10
+step: 3500, mse(so far/this step): 8.27e-10/9.83e-10
+step: 4000, mse(so far/this step): 8.26e-10/8.14e-10
+step: 4500, mse(so far/this step): 8.27e-10/8.02e-10
+step: 5000, mse(so far/this step): 8.26e-10/9.21e-10
+step: 5500, mse(so far/this step): 8.25e-10/7.80e-10
+step: 6000, mse(so far/this step): 8.26e-10/8.39e-10
+step: 6500, mse(so far/this step): 8.26e-10/8.78e-10
+step: 7000, mse(so far/this step): 8.26e-10/7.98e-10
+step: 7500, mse(so far/this step): 8.25e-10/8.56e-10
+step: 8000, mse(so far/this step): 8.25e-10/8.60e-10
+step: 8500, mse(so far/this step): 8.25e-10/8.04e-10
+step: 9000, mse(so far/this step): 8.24e-10/7.16e-10
+step: 9500, mse(so far/this step): 8.24e-10/8.92e-10
+step: 9999, mse(so far/this step): 8.24e-10/7.96e-10
+
+Discrete Model:
+-----
+Overall Mean: 1.537e-10
+Overall Min: 1.468e-10
+Overall Max: 1.603e-10
+Std Dev: 2.882e-12
+Variance: 8.305e-24
+Median: 1.537e-10
+Q1: 1.515e-10
+Q3: 1.559e-10
+IQR: 4.477e-12
+Range: 1.354e-11
+
+Continuous Model:
+-----
+Overall Mean: 8.237e-10
+Overall Min: 1.328e-10
+Overall Max: 7.823e-08
+Std Dev: 6.136e-10
+Variance: 3.765e-19
+Median: 6.831e-10
+Q1: 4.662e-10
+Q3: 1.015e-09
+IQR: 5.487e-10
+Range: 7.810e-08
+
+Plot saved to '/work/msoltani/projects/DeepCubeAI_draft/DeepCubeConstrained_final_0.5/plots/sokoban_mse_100eps_10000steps_1.pdf'
+Information saved to '/work/msoltani/projects/DeepCubeAI_draft/DeepCubeConstrained_final_0.5/plots/sokoban_mse_100eps_10000steps_1.txt'
