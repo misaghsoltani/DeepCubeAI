@@ -1,6 +1,6 @@
 # Repository for [DeepCubeAI](https://rlj.cs.umass.edu/2024/papers/Paper225.html) 
 
-This repository contains the code and materials for the paper [DeepCubeAI](https://rlj.cs.umass.edu/2024/papers/Paper225.html)
+This repository contains the code and materials for the paper [Learning Discrete World Models for Heuristic Search](https://rlj.cs.umass.edu/2024/papers/Paper225.html)
 
 ## Getting Started
 
