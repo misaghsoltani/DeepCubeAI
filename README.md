@@ -13,4 +13,4 @@ To run the code, please follow these steps:
 
 The `reproduce_results` folder contains scripts to run the code. To run different stages of the code and reproduce the results in the paper, please use the corresponding `.sh` files in the `reproduce_results` folder. The code should be run in the order given by the command inside `.sh` files.
 
-Additionally, if you want to run the code on a systme with SLURM scheduler, you can the job submission files in the `job_submissions` folder.
+Additionally, if you want to run the code on a machine with SLURM scheduler, you can the job submission files in the `job_submissions` folder.
