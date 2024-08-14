@@ -2,8 +2,8 @@
 /data
 /saved_env_models
 /saved_heur_models
-environments/puzzlegen/.DS_Store
 .DS_Store
 /job_run_outputs
 *.pyc
 /results
+__pycache__
