@@ -4,9 +4,10 @@ from typing import Dict, List, Optional, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from environments.environment_abstract import Environment, State
 from matplotlib import gridspec
 from torch import nn
+
+from environments.environment_abstract import Environment, State
 
 
 class ImageHandler:
@@ -40,9 +41,16 @@ class ImageHandler:
 
         # Initialize for the first image (step 0)
         self.state_images_np: np.ndarray = np.array(self.env.state_to_real([self.state_soln])[0])
-        self.state_images_np = np.expand_dims(self.state_images_np, axis=0)
         self.nnet_images_np: np.ndarray = np.array(
             self._get_real_state_image([self.path[0]], self.device))
+
+        if self.state_images_np.shape[0] == 6:
+            self.state_images_np = np.concatenate(
+                (self.state_images_np[:3, :, :], self.state_images_np[3:, :, :]), axis=2)
+            self.nnet_images_np = np.concatenate(
+                (self.nnet_images_np[:3, :, :], self.nnet_images_np[3:, :, :]), axis=2)
+
+        self.state_images_np = np.expand_dims(self.state_images_np, axis=0)
         self.nnet_images_np = np.expand_dims(self.nnet_images_np, axis=0)
         self.img_texts_row1.append("Step 0 - Move: None")
         self.img_texts_row2.append("Step 0 - Move: None")
@@ -74,12 +82,12 @@ class ImageHandler:
                                                           [self.optimal_soln[idx]])[0][0]
             state_img_optimal_np = self.env.state_to_real([self.state_soln_optimal])[0]
 
-        if state_img_np.shape[2] == 6:
-            state_img_np = np.concatenate((state_img_np[:, :, :3], state_img_np[:, :, 3:]), axis=1)
+        if state_img_np.shape[0] == 6:
+            state_img_np = np.concatenate((state_img_np[:3, :, :], state_img_np[3:, :, :]), axis=2)
             nnet_img_np = np.concatenate((nnet_img_np[:3, :, :], nnet_img_np[3:, :, :]), axis=2)
             if self.has_get_solution and idx < self.optimal_path_len:
                 state_img_optimal_np = np.concatenate(
-                    (state_img_optimal_np[:, :, :3], state_img_optimal_np[:, :, 3:]), axis=1)
+                    (state_img_optimal_np[:3, :, :], state_img_optimal_np[3:, :, :]), axis=2)
 
         self.state_images_np = np.vstack((self.state_images_np, np.expand_dims(state_img_np,
                                                                                axis=0)))
@@ -108,8 +116,12 @@ class ImageHandler:
         key_recon: str = ("The Path Found: Actions Taken in the NNet Environment Model " +
                           "(Reconstructions)")
         key_optimal: str = "The Optimal Path: Actions Taken in the Real Environment"
-        self.images_dict[key_real_world] = self.state_images_np.transpose(0, 2, 3, 1)
-        self.images_dict[key_recon] = self.nnet_images_np.transpose(0, 2, 3, 1)
+
+        self.state_images_np = self.state_images_np.transpose(0, 2, 3, 1)
+        self.nnet_images_np = self.nnet_images_np.transpose(0, 2, 3, 1)
+
+        self.images_dict[key_real_world] = self.state_images_np[:]
+        self.images_dict[key_recon] = self.nnet_images_np[:]
         self.img_texts.append(self.img_texts_row1)
         self.img_texts.append(self.img_texts_row2)
 
@@ -119,10 +131,6 @@ class ImageHandler:
                 self.state_soln_optimal = self.env.next_state([self.state_soln_optimal],
                                                               [self.optimal_soln[idx]])[0][0]
                 state_img_optimal_np = self.env.state_to_real([self.state_soln_optimal])[0]
-
-                if self.state_img_np.shape[2] == 6:
-                    state_img_optimal_np = np.concatenate(
-                        (state_img_optimal_np[:, :, :3], state_img_optimal_np[:, :, 3:]), axis=1)
 
                 self.state_images_optimal_np = np.vstack(
                     (self.state_images_optimal_np, np.expand_dims(state_img_optimal_np, axis=0)))

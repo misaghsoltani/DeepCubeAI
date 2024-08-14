@@ -15,6 +15,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 import numpy as np
 import torch
+
 from environments.environment_abstract import Environment, State
 from environments.sokoban import SokobanState
 from utils import data_utils, env_utils, misc_utils, nnet_utils, search_utils
@@ -23,13 +24,8 @@ from utils.data_utils import print_args
 
 class Node:
 
-    def __init__(
-        self,
-        state: np.ndarray,
-        path_cost: float,
-        parent_move: Optional[int],
-        parent: Optional["Node"],
-    ):
+    def __init__(self, state: np.ndarray, path_cost: float, parent_move: Optional[int],
+                 parent: Optional["Node"]):
         """
         Initializes a Node.
 
@@ -348,14 +344,8 @@ def get_is_solved_fn(per_eq_tol: float) -> Callable:
 
 class QStarImag:
 
-    def __init__(
-        self,
-        states: np.ndarray,
-        state_goals: np.ndarray,
-        heuristic_fn: Callable,
-        weights: List[float],
-        num_actions_max: int,
-    ):
+    def __init__(self, states: np.ndarray, state_goals: np.ndarray, heuristic_fn: Callable,
+                 weights: List[float], num_actions_max: int):
         """
         Initializes an QStarImag instance.
 
@@ -375,7 +365,7 @@ class QStarImag:
             "closed": 0.0,
             "heur": 0.0,
             "add": 0.0,
-            "itr": 0.0,
+            "itr": 0.0
         }
 
         # compute starting costs
@@ -397,14 +387,12 @@ class QStarImag:
         self.last_node: Node = None
 
     # TODO make separate is_solved_fn and is_same_fn
-    def step(
-        self,
-        heuristic_fn: Callable,
-        model_fn: Callable,
-        is_solved_fn: Callable,
-        batch_size: int,
-        verbose: bool = False,
-    ) -> Optional[bool]:
+    def step(self,
+             heuristic_fn: Callable,
+             model_fn: Callable,
+             is_solved_fn: Callable,
+             batch_size: int,
+             verbose: bool = False) -> bool:
         """
         Performs a step in the Q* search.
 
@@ -416,7 +404,7 @@ class QStarImag:
             verbose (bool): Whether to print verbose output.
 
         Returns:
-            Optional[bool]: None if the search continues, False if no more nodes to expand.
+            bool: True if the search continues, False if no more nodes to expand.
         """
         start_time_itr = time.time()
         instances = [
@@ -424,6 +412,7 @@ class QStarImag:
             if (len(instance.goal_nodes) == 0) and len(instance.open_set) > 0
         ]
         if len(instances) == 0:
+            print("Open set is empty. Returning the result ...")
             return False
 
         # Pop from open
@@ -492,7 +481,7 @@ class QStarImag:
 
         self.step_num += 1
 
-        return None
+        return True
 
     def has_found_goal(self) -> List[bool]:
         """
@@ -560,8 +549,7 @@ def parse_arguments(parser: ArgumentParser, args_list: List[str] = None) -> Dict
         "--h_weight",
         type=float,
         default=1.0,
-        help="Weight of the heuristics. Set it to 0 for performing a Uniform Cost Search",
-    )
+        help="Weight of the heuristics. Set it to 0 for performing a Uniform Cost Search")
     # Parse known arguments first for the value of --h_weight
     args, _ = parser.parse_known_args(args_list)
     # print(vars(args))
@@ -587,28 +575,25 @@ def parse_arguments(parser: ArgumentParser, args_list: List[str] = None) -> Dict
                         help="Environment: cube3, iceslider, digitjump, sokoban")
 
     parser.add_argument("--env_model", type=str, required=True, help="Directory of env model")
-    parser.add_argument("--batch_size", type=int, default=1, help="Batch size for BWAS")
+    parser.add_argument("--batch_size", type=int, default=1, help="Batch size for BWQS")
     parser.add_argument("--weight", type=float, default=1.0, help="Weight of path cost")
 
     parser.add_argument("--results_dir", type=str, required=True, help="Directory to save results")
     parser.add_argument("--start_idx", type=int, default=None, help="")
-    parser.add_argument(
-        "--nnet_batch_size",
-        type=int,
-        default=None,
-        help="Set to control how many states per GPU are "
-        "evaluated by the neural network at a time. "
-        "Does not affect final results, "
-        "but will help if nnet is running out of "
-        "memory.",
-    )
+    parser.add_argument("--nnet_batch_size",
+                        type=int,
+                        default=None,
+                        help="Set to control how many states per GPU are "
+                        "evaluated by the neural network at a time. "
+                        "Does not affect final results, "
+                        "but will help if nnet is running out of "
+                        "memory.")
 
     parser.add_argument(
         "--per_eq_tol",
         type=float,
         required=True,
-        help="Percent of latent state elements that need to be equal to declare equal",
-    )
+        help="Percent of latent state elements that need to be equal to declare equal")
 
     parser.add_argument("--verbose", action="store_true", default=False, help="Set for verbose")
     parser.add_argument("--debug", action="store_true", default=False, help="Set when debugging")
@@ -616,14 +601,12 @@ def parse_arguments(parser: ArgumentParser, args_list: List[str] = None) -> Dict
     # If provided as --save_imgs 'true', then args.save_imgs will be 'true'
     # If provided as --save_imgs (without any value), then args.save_imgs will be 'true'
     # If is not provided --save_imgs at all, then args.save_imgs will be 'false'
-    parser.add_argument(
-        "--save_imgs",
-        type=str,
-        nargs="?",
-        const="true",
-        default="false",
-        help="Save the images of the steps of solving each state to file",
-    )
+    parser.add_argument("--save_imgs",
+                        type=str,
+                        nargs="?",
+                        const="true",
+                        default="false",
+                        help="Save the images of the steps of solving each state to file")
 
     # parse arguments
     args = parser.parse_args(args_list)
@@ -707,13 +690,13 @@ def main(args_list: List[str] = None) -> None:
 
     print(f"Starting at idx {start_idx}")
 
-    bwas_python(args_dict, start_idx, env, states, state_goals, results, results_file,
+    bwqs_python(args_dict, start_idx, env, states, state_goals, results, results_file,
                 args_dict["save_imgs"], save_imgs_dir)
 
 
-def bwas_python(args_dict: Dict[str, Any], start_idx: int, env: Environment, states: List[State],
+def bwqs_python(args_dict: Dict[str, Any], start_idx: int, env: Environment, states: List[State],
                 state_goals: List[State], results: Dict[str, Any], results_file: str,
-                save_imgs: bool, save_imgs_dir: str) -> None:
+                save_imgs: bool, save_imgs_dir: Optional[str]) -> None:
     """Performs the batched and weighted version of Q* search algorithm.
 
     Args:
@@ -724,8 +707,9 @@ def bwas_python(args_dict: Dict[str, Any], start_idx: int, env: Environment, sta
         state_goals (List[State]): List of goal states.
         results (Dict[str, Any]): Dictionary to store results.
         results_file (str): Path to the results file.
-        save_imgs (bool): Whether to save images.
-        save_imgs_dir (str): Directory to save images.
+        save_imgs (bool): Whether to save images. If this is True, save_imgs_dir must be provided.
+        save_imgs_dir (Optional[str]): Directory to save images. This will be used only if
+            save_imgs is True.
     """
     # get device
     on_gpu: bool
@@ -739,14 +723,12 @@ def bwas_python(args_dict: Dict[str, Any], start_idx: int, env: Environment, sta
     # If performing UCS, no need to load the heuristic function
     heuristic_fn = None
     if args_dict["h_weight"] != 0:
-        heuristic_fn = nnet_utils.load_heuristic_fn(
-            args_dict["heur"],
-            device,
-            on_gpu,
-            env.get_dqn(),
-            clip_zero=True,
-            batch_size=args_dict["nnet_batch_size"],
-        )
+        heuristic_fn = nnet_utils.load_heuristic_fn(args_dict["heur"],
+                                                    device,
+                                                    on_gpu,
+                                                    env.get_dqn(),
+                                                    clip_zero=True,
+                                                    batch_size=args_dict["nnet_batch_size"])
 
     env_model_file: str = f"{args_dict['env_model']}/env_state_dict.pt"
     model_fn = nnet_utils.load_model_fn(env_model_file,
@@ -769,13 +751,14 @@ def bwas_python(args_dict: Dict[str, Any], start_idx: int, env: Environment, sta
     num_actions_max: int = env.num_actions_max
 
     print(f"Total number of test states: {len(states)}")
-
     for state_idx in range(start_idx, len(states)):
         state: State = states[state_idx]
         state_goal: State = state_goals[state_idx]
 
         start_time = time.time()
         num_itrs: int = 0
+        # res is used to check whether to continue search or not
+        res: bool = True
 
         state_real = env.state_to_real([state])
         state_enc = encoder(torch.tensor(state_real, device=device).float())[1]
@@ -821,17 +804,13 @@ def bwas_python(args_dict: Dict[str, Any], start_idx: int, env: Environment, sta
                               heuristic_fn,
                               weights=[args_dict["weight"]] * states_enc_np.shape[0],
                               num_actions_max=num_actions_max)
-            while not max(qstar.has_found_goal()):
-                res = qstar.step(
-                    heuristic_fn,
-                    model_fn,
-                    is_solved_fn,
-                    args_dict["batch_size"],
-                    verbose=args_dict["verbose"],
-                )
+            while res and not max(qstar.has_found_goal()):
+                res = qstar.step(heuristic_fn,
+                                 model_fn,
+                                 is_solved_fn,
+                                 args_dict["batch_size"],
+                                 verbose=args_dict["verbose"])
                 num_itrs += 1
-                if not res:
-                    break
 
             if res:
                 # get goal node
@@ -851,25 +830,21 @@ def bwas_python(args_dict: Dict[str, Any], start_idx: int, env: Environment, sta
                               heuristic_fn,
                               weights=[args_dict["weight"]],
                               num_actions_max=num_actions_max)
-            while not min(qstar.has_found_goal()):
-                res = qstar.step(
-                    heuristic_fn,
-                    model_fn,
-                    is_solved_fn,
-                    args_dict["batch_size"],
-                    verbose=args_dict["verbose"],
-                )
+            while res and not min(qstar.has_found_goal()):
+                res = qstar.step(heuristic_fn,
+                                 model_fn,
+                                 is_solved_fn,
+                                 args_dict["batch_size"],
+                                 verbose=args_dict["verbose"])
                 num_itrs += 1
-                if not res:
-                    break
 
             if res:
                 goal_node: Node = qstar.get_goal_node_smallest_path_cost(0)
 
-            # If not solved, use the last node. Used only for
-            # saving the image, when save_imgs is True
-            else:
-                goal_node = qstar.last_node
+        # If the open set became empty without fidning a solution, use the last node.
+        # Used only for saving the image, when save_imgs is True
+        if not res:
+            goal_node = qstar.last_node
 
         path: List[np.array]
         soln: List[int]
@@ -896,12 +871,16 @@ def bwas_python(args_dict: Dict[str, Any], start_idx: int, env: Environment, sta
 
         # print to screen
         timing_str = ", ".join([f"{key}: {val:.2f}" for key, val in qstar.timings.items()])
-        print(
-            f"Times - {timing_str}, num_itrs: {num_itrs}\n"
-            f"State: {state_idx}, Solved: {'Yes' if solved else 'No'}, SolnCost: {path_cost:.2f}, "
-            f"# Moves: {len(soln)}, # Nodes Gen: {num_nodes_gen_idx:,}, Time: {solve_time:.2f}, "
-            f"Nodes/Sec: {nodes_per_sec:.2E}\n"
-            "___________________________________\n")
+        print(f"Times - {timing_str}, "
+              f"num_itrs: {num_itrs}\n"
+              f"State: {state_idx}, "
+              f"Solved: {'Yes' if solved else 'No'}, "
+              f"SolnCost: {path_cost:.2f}, "
+              f"# Moves: {len(soln)}, "
+              f"# Nodes Gen: {num_nodes_gen_idx:,}, "
+              f"Time: {solve_time:.2f}, "
+              f"Nodes/Sec: {nodes_per_sec:.2E}\n"
+              f"___________________________________\n")
 
         # If the State class implements the get_opt_path_len() mehtod for getting the optimal path
         has_get_opt_path_len: bool = hasattr(state, "get_opt_path_len")
