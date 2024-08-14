@@ -42,7 +42,7 @@ if [[ "$1" == "--help" ]]; then
     show_help
 fi
 
-# Remove all environment variables that start with 'DCAI_', 
+# Remove all environment variables that start with 'DCAI_',
 # to avoid any potential conflicts or leftovers
 unset_vars() {
     unset ${!DCAI_*}
@@ -51,188 +51,187 @@ unset_vars
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --stage)
-            DCAI_STAGE="$2"
-            shift 2
-            ;;
-        --env)
-            DCAI_ENV="$2"
-            shift 2
-            ;;
-        --num_offline_steps)
-            DCAI_NUM_OFFLINE_STEPS="$2"
-            shift 2
-            ;;
-         --start_level)
-            DCAI_START_LEVEL="$2"
-            shift 2
-            ;;
-         --num_levels)
-            DCAI_NUM_LEVELS="$2"
-            shift 2
-            ;;
-        --env_model_name)
-            DCAI_ENV_MODEL_NAME="$2"
-            shift 2
-            ;;
-        --heur_nnet_name)
-            DCAI_HEUR_NNET_NAME="$2"
-            shift 2
-            ;;
-        --heur_batch_size)
-            DCAI_HEUR_BATCH_SIZE="$2"
-            shift 2
-            ;;
-        --states_per_update)
-            DCAI_STATES_PER_UPDATE="$2"
-            shift 2
-            ;;
-        --max_solve_steps)
-            DCAI_MAX_SOLVE_STEPS="$2"
-            shift 2
-            ;;
-        --start_steps)
-            DCAI_START_STEPS="$2"
-            shift 2
-            ;;
-        --goal_steps)
-            DCAI_GOAL_STEPS="$2"
-            shift 2
-            ;;
-        --num_cpus)
-            DCAI_NUM_CPUS="$2"
-            shift 2
-            ;;
-        --search_test_data)
-            DCAI_SEARCH_TEST_DATA="$2"
-            shift 2
-            ;;
-        --qstar_batch_size)
-            DCAI_QSTAR_BATCH_SIZE="$2"
-            shift 2
-            ;;
-        --ucs_batch_size)
-            DCAI_UCS_BATCH_SIZE="$2"
-            shift 2
-            ;;
-        --qstar_weight)
-            DCAI_QSTAR_WEIGHT="$2"
-            shift 2
-            ;;
-        --qstar_h_weight)
-            DCAI_QSTAR_H_WEIGHT="$2"
-            shift 2
-            ;;
-        --qstar_results_dir)
-            DCAI_QSTAR_RESULTS_DIR="$2"
-            shift 2
-            ;;
-        --ucs_results_dir)
-            DCAI_UCS_RESULTS_DIR="$2"
-            shift 2
-            ;;
-        --gbfs_results_dir)
-            DCAI_GBFS_RESULTS_DIR="$2"
-            shift 2
-            ;;
-        --search_itrs)
-            DCAI_SEARCH_ITRS="$2"
-            shift 2
-            ;;
-        --per_eq_tol)
-            DCAI_PER_EQ_TOL="$2"
-            shift 2
-            ;;
-        --data_dir)
-            DCAI_DATA_DIR="$2"
-            shift 2
-            ;;
-        --data_file_name)
-            DCAI_DATA_FILE_NAME="$2"
-            shift 2
-            ;;
-        --num_train_eps)
-            DCAI_NUM_OFFLINE_EPS_TRAIN="$2"
-            shift 2
-            ;;
-        --num_val_eps)
-            DCAI_NUM_OFFLINE_EPS_VAL="$2"
-            shift 2
-            ;;
-        --num_test_eps)
-            DCAI_NUM_OFFLINE_EPS_TEST="$2"
-            shift 2
-            ;;
-        --num_train_trajs_viz)
-            DCAI_NUM_TRAIN_TRAJS_VIZ="$2"
-            shift 2
-            ;;
-        --num_train_steps_viz)
-            DCAI_NUM_TRAIN_STEPS_VIZ="$2"
-            shift 2
-            ;;
-        --num_val_trajs_viz)
-            DCAI_NUM_VAL_TRAJS_VIZ="$2"
-            shift 2
-            ;;
-        --num_val_steps_viz)
-            DCAI_NUM_VAL_STEPS_VIZ="$2"
-            shift 2
-            ;;
-        --model_test_data_dir)
-            DCAI_MODEL_TEST_DATA="$2"
-            shift 2
-            ;;
-        --env_model_dir_disc)
-            DCAI_ENV_MODEL_DIR_DISC="$2"
-            shift 2
-            ;;
-        --env_model_dir_cont)
-            DCAI_ENV_MODEL_DIR_CONT="$2"
-            shift 2
-            ;;
-        --num_episodes)
-            DCAI_NUM_EPISODES="$2"
-            shift 2
-            ;;
-        --num_steps)
-            DCAI_NUM_STEPS="$2"
-            shift 2
-            ;;
-        --save_dir)
-            DCAI_SAVE_DIR="$2"
-            shift 2
-            ;;
-        --env_batch_size)
-            DCAI_ENV_TRAIN_BATCH_SIZE="$2"
-            shift 2
-            ;;
-        --print_interval)
-            DCAI_PRINT_INTERVAL="$2"
-            shift 2
-            ;;
-        --save_imgs)
-            DCAI_SAVE_IMGS="$2"
-            shift 2
-            ;;
-        --num_test)
-            DCAI_NUM_TEST="$2"
-            shift 2
-            ;;
-        --use_dist)
-            DCAI_USE_DIST=true
-            shift 1
-            ;;
-        *)
-            echo ""
-            echo "ARG ERROR: Unknown option: $1"
-            echo ""
-            unset_vars
-            exit 1
-            ;;
+    --stage)
+        DCAI_STAGE="$2"
+        shift 2
+        ;;
+    --env)
+        DCAI_ENV="$2"
+        shift 2
+        ;;
+    --num_offline_steps)
+        DCAI_NUM_OFFLINE_STEPS="$2"
+        shift 2
+        ;;
+    --start_level)
+        DCAI_START_LEVEL="$2"
+        shift 2
+        ;;
+    --num_levels)
+        DCAI_NUM_LEVELS="$2"
+        shift 2
+        ;;
+    --env_model_name)
+        DCAI_ENV_MODEL_NAME="$2"
+        shift 2
+        ;;
+    --heur_nnet_name)
+        DCAI_HEUR_NNET_NAME="$2"
+        shift 2
+        ;;
+    --heur_batch_size)
+        DCAI_HEUR_BATCH_SIZE="$2"
+        shift 2
+        ;;
+    --states_per_update)
+        DCAI_STATES_PER_UPDATE="$2"
+        shift 2
+        ;;
+    --max_solve_steps)
+        DCAI_MAX_SOLVE_STEPS="$2"
+        shift 2
+        ;;
+    --start_steps)
+        DCAI_START_STEPS="$2"
+        shift 2
+        ;;
+    --goal_steps)
+        DCAI_GOAL_STEPS="$2"
+        shift 2
+        ;;
+    --num_cpus)
+        DCAI_NUM_CPUS="$2"
+        shift 2
+        ;;
+    --search_test_data)
+        DCAI_SEARCH_TEST_DATA="$2"
+        shift 2
+        ;;
+    --qstar_batch_size)
+        DCAI_QSTAR_BATCH_SIZE="$2"
+        shift 2
+        ;;
+    --ucs_batch_size)
+        DCAI_UCS_BATCH_SIZE="$2"
+        shift 2
+        ;;
+    --qstar_weight)
+        DCAI_QSTAR_WEIGHT="$2"
+        shift 2
+        ;;
+    --qstar_h_weight)
+        DCAI_QSTAR_H_WEIGHT="$2"
+        shift 2
+        ;;
+    --qstar_results_dir)
+        DCAI_QSTAR_RESULTS_DIR="$2"
+        shift 2
+        ;;
+    --ucs_results_dir)
+        DCAI_UCS_RESULTS_DIR="$2"
+        shift 2
+        ;;
+    --gbfs_results_dir)
+        DCAI_GBFS_RESULTS_DIR="$2"
+        shift 2
+        ;;
+    --search_itrs)
+        DCAI_SEARCH_ITRS="$2"
+        shift 2
+        ;;
+    --per_eq_tol)
+        DCAI_PER_EQ_TOL="$2"
+        shift 2
+        ;;
+    --data_dir)
+        DCAI_DATA_DIR="$2"
+        shift 2
+        ;;
+    --data_file_name)
+        DCAI_DATA_FILE_NAME="$2"
+        shift 2
+        ;;
+    --num_train_eps)
+        DCAI_NUM_OFFLINE_EPS_TRAIN="$2"
+        shift 2
+        ;;
+    --num_val_eps)
+        DCAI_NUM_OFFLINE_EPS_VAL="$2"
+        shift 2
+        ;;
+    --num_test_eps)
+        DCAI_NUM_OFFLINE_EPS_TEST="$2"
+        shift 2
+        ;;
+    --num_train_trajs_viz)
+        DCAI_NUM_TRAIN_TRAJS_VIZ="$2"
+        shift 2
+        ;;
+    --num_train_steps_viz)
+        DCAI_NUM_TRAIN_STEPS_VIZ="$2"
+        shift 2
+        ;;
+    --num_val_trajs_viz)
+        DCAI_NUM_VAL_TRAJS_VIZ="$2"
+        shift 2
+        ;;
+    --num_val_steps_viz)
+        DCAI_NUM_VAL_STEPS_VIZ="$2"
+        shift 2
+        ;;
+    --model_test_data_dir)
+        DCAI_MODEL_TEST_DATA="$2"
+        shift 2
+        ;;
+    --env_model_dir_disc)
+        DCAI_ENV_MODEL_DIR_DISC="$2"
+        shift 2
+        ;;
+    --env_model_dir_cont)
+        DCAI_ENV_MODEL_DIR_CONT="$2"
+        shift 2
+        ;;
+    --num_episodes)
+        DCAI_NUM_EPISODES="$2"
+        shift 2
+        ;;
+    --num_steps)
+        DCAI_NUM_STEPS="$2"
+        shift 2
+        ;;
+    --save_dir)
+        DCAI_SAVE_DIR="$2"
+        shift 2
+        ;;
+    --env_batch_size)
+        DCAI_ENV_TRAIN_BATCH_SIZE="$2"
+        shift 2
+        ;;
+    --print_interval)
+        DCAI_PRINT_INTERVAL="$2"
+        shift 2
+        ;;
+    --save_imgs)
+        DCAI_SAVE_IMGS="$2"
+        shift 2
+        ;;
+    --num_test)
+        DCAI_NUM_TEST="$2"
+        shift 2
+        ;;
+    --use_dist)
+        DCAI_USE_DIST=true
+        shift 1
+        ;;
+    *)
+        echo ""
+        echo "ARG ERROR: Unknown option: $1"
+        echo ""
+        unset_vars
+        exit 1
+        ;;
     esac
 done
-
 
 handle_offline_data_args() {
     # Check if both DCAI_NUM_OFFLINE_EPS_TRAIN and DCAI_NUM_OFFLINE_EPS_VAL are not provided
@@ -257,8 +256,6 @@ handle_offline_data_args() {
     fi
 
     DCAI_NUM_OFFLINE_EPS_TEST="${DCAI_NUM_OFFLINE_EPS_TEST:-100}"
-    
-
 
     if [[ -n "$DCAI_START_LEVEL" && -n "$DCAI_NUM_LEVELS" ]]; then
         DCAI_START_SEED_TRAIN="$DCAI_START_LEVEL"
@@ -304,45 +301,45 @@ handle_offline_data_vars() {
     DCAI_OFFLINE_SEARCH_TEST_DIR=data/${DCAI_DATA_DIR}/search_test
     DCAI_DATA_SAMPLE_IMG_DIR=data/${DCAI_DATA_DIR}/sample_images
 
-    # Set DCAI_TRAIN_DATA_FILE_NAME to "train_data" if DCAI_DATA_FILE_NAME is empty, 
+    # Set DCAI_TRAIN_DATA_FILE_NAME to "train_data" if DCAI_DATA_FILE_NAME is empty,
     # else append "_train_data" unless it already contains "train_data"
-    DCAI_TRAIN_DATA_FILE_NAME=$( [ -z "$DCAI_DATA_FILE_NAME" ] && echo "train_data" || ( echo "$DCAI_DATA_FILE_NAME" | grep -q "train_data" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_train_data" ) )
+    DCAI_TRAIN_DATA_FILE_NAME=$([ -z "$DCAI_DATA_FILE_NAME" ] && echo "train_data" || (echo "$DCAI_DATA_FILE_NAME" | grep -q "train_data" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_train_data"))
     DCAI_OFFLINE_TRAIN="${DCAI_OFFLINE_DIR}/${DCAI_TRAIN_DATA_FILE_NAME}.pkl"
 
     # Set DCAI_VAL_DATA_FILE_NAME to "val_data" if DCAI_DATA_FILE_NAME is empty,
     # else append "_val_data" unless it already contains "val_data"
-    DCAI_VAL_DATA_FILE_NAME=$( [ -z "$DCAI_DATA_FILE_NAME" ] && echo "val_data" || ( echo "$DCAI_DATA_FILE_NAME" | grep -q "val_data" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_val_data" ) )
+    DCAI_VAL_DATA_FILE_NAME=$([ -z "$DCAI_DATA_FILE_NAME" ] && echo "val_data" || (echo "$DCAI_DATA_FILE_NAME" | grep -q "val_data" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_val_data"))
     DCAI_OFFLINE_VAL=${DCAI_OFFLINE_DIR}/${DCAI_VAL_DATA_FILE_NAME}.pkl
 
     # Set DCAI_ENV_TEST_DATA_FILE_NAME to "env_test_data" if DCAI_DATA_FILE_NAME is empty,
     # else append "_env_test_data" unless it already contains "env_test_data"
-    DCAI_ENV_TEST_DATA_FILE_NAME=$( [ -z "$DCAI_DATA_FILE_NAME" ] && echo "env_test_data" || ( echo "$DCAI_DATA_FILE_NAME" | grep -q "env_test_data" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_env_test_data" ) )
+    DCAI_ENV_TEST_DATA_FILE_NAME=$([ -z "$DCAI_DATA_FILE_NAME" ] && echo "env_test_data" || (echo "$DCAI_DATA_FILE_NAME" | grep -q "env_test_data" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_env_test_data"))
     DCAI_OFFLINE_ENV_TEST=$DCAI_OFFLINE_ENV_TEST_DIR/${DCAI_ENV_TEST_DATA_FILE_NAME}.pkl
 
     # Set DCAI_SEARCH_TEST_DATA_FILE_NAME to "search_test_data" if DCAI_DATA_FILE_NAME is empty,
     # else append "_search_test_data" unless it already contains "search_test_data"
-    DCAI_SEARCH_TEST_DATA_FILE_NAME=$( [ -z "$DCAI_DATA_FILE_NAME" ] && echo "search_test_data" || ( echo "$DCAI_DATA_FILE_NAME" | grep -q "search_test_data" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_search_test_data" ) )
+    DCAI_SEARCH_TEST_DATA_FILE_NAME=$([ -z "$DCAI_DATA_FILE_NAME" ] && echo "search_test_data" || (echo "$DCAI_DATA_FILE_NAME" | grep -q "search_test_data" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_search_test_data"))
     DCAI_OFFLINE_SEARCH_TEST=$DCAI_OFFLINE_SEARCH_TEST_DIR/${DCAI_SEARCH_TEST_DATA_FILE_NAME}.pkl
 
     # Set DCAI_TRAIN_ENC_DATA_FILE_NAME to "train_data_enc" if DCAI_DATA_FILE_NAME is empty,
     # else append "_train_data_enc" unless it already contains "train_data_enc"
-    DCAI_TRAIN_ENC_DATA_FILE_NAME=$( [ -z "$DCAI_DATA_FILE_NAME" ] && echo "train_data_enc" || ( echo "$DCAI_DATA_FILE_NAME" | grep -q "train_data_enc" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_train_data_enc" ) )
+    DCAI_TRAIN_ENC_DATA_FILE_NAME=$([ -z "$DCAI_DATA_FILE_NAME" ] && echo "train_data_enc" || (echo "$DCAI_DATA_FILE_NAME" | grep -q "train_data_enc" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_train_data_enc"))
     DCAI_OFFLINE_TRAIN_ENC=${DCAI_OFFLINE_DIR}/${DCAI_TRAIN_ENC_DATA_FILE_NAME}.pkl
 
     # Set DCAI_VAL_ENC_DATA_FILE_NAME to "val_data_enc" if DCAI_DATA_FILE_NAME is empty,
     # else append "_val_data_enc" unless it already contains "val_data_enc"
-    DCAI_VAL_ENC_DATA_FILE_NAME=$( [ -z "$DCAI_DATA_FILE_NAME" ] && echo "val_data_enc" || ( echo "$DCAI_DATA_FILE_NAME" | grep -q "val_data_enc" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_val_data_enc" ) )
+    DCAI_VAL_ENC_DATA_FILE_NAME=$([ -z "$DCAI_DATA_FILE_NAME" ] && echo "val_data_enc" || (echo "$DCAI_DATA_FILE_NAME" | grep -q "val_data_enc" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_val_data_enc"))
     DCAI_OFFLINE_VAL_ENC=${DCAI_OFFLINE_DIR}/${DCAI_VAL_ENC_DATA_FILE_NAME}.pkl
 
     # Set DCAI_VAL_ENC_DATA_FILE_NAME to "val_data_enc" if DCAI_DATA_FILE_NAME is empty,
     # else append "_val_data_enc" unless it already contains "val_data_enc"
-    DCAI_VAL_ENC_DATA_FILE_NAME=$( [ -z "$DCAI_DATA_FILE_NAME" ] && echo "val_data_enc" || ( echo "$DCAI_DATA_FILE_NAME" | grep -q "val_data_enc" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_val_data_enc" ) )
+    DCAI_VAL_ENC_DATA_FILE_NAME=$([ -z "$DCAI_DATA_FILE_NAME" ] && echo "val_data_enc" || (echo "$DCAI_DATA_FILE_NAME" | grep -q "val_data_enc" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_val_data_enc"))
     DCAI_OFFLINE_VAL_ENC=${DCAI_OFFLINE_DIR}/${DCAI_VAL_ENC_DATA_FILE_NAME}.pkl
 
     DCAI_NUM_CPUS=${DCAI_NUM_CPUS:-1}
 }
 
-handle_search_test_data_vars () {
+handle_search_test_data_vars() {
     DCAI_NUM_OFFLINE_STEPS=${DCAI_NUM_OFFLINE_STEPS:- -1}
 }
 
@@ -383,7 +380,7 @@ setup_mpi() {
     NUM_WORKERS_PER_NODE=$(echo $SLURM_JOB_GPUS | awk -F, '{print NF}') #$(nvidia-smi --query-gpu=index --format=csv,noheader | wc -l)
     TOTAL_WORKERS=0
     H_OPTION=""
-    
+
     # Construct -H option for mpirun
     for HOST in $HOSTS; do
         # # Get the IP address of the current host
@@ -396,17 +393,17 @@ setup_mpi() {
         H_OPTION+="$HOST:$NUM_WORKERS,"
         TOTAL_WORKERS=$((TOTAL_WORKERS + NUM_WORKERS))
     done
-    H_OPTION=${H_OPTION::-1}  # Remove the last comma
-    
+    H_OPTION=${H_OPTION::-1} # Remove the last comma
+
     # Set MASTER_ADDR and MASTER_PORT
     MASTER_ADDR=$(echo "$H_OPTION" | cut -d, -f1 | cut -d: -f1)
-    MASTER_PORT=$(shuf -i 2000-65000 -n 1)  # Generate a random port number between 2000 and 65000
-    
+    MASTER_PORT=$(shuf -i 2000-65000 -n 1) # Generate a random port number between 2000 and 65000
+
     NP_OPTION=$TOTAL_WORKERS #$((NUM_NODES * NUM_WORKERS_PER_NODE))
     # export OMP_NUM_THREADS=$((SLURM_CPUS_PER_TASK - 2))
     # export I_MPI_PIN_DOMAIN=omp
     # export NCCL_DEBUG=INFO
-    
+
     # Output the MPI run command parameters
     echo "Variables for running MPI job:"
     echo "Nodes: $HOSTS"
@@ -466,7 +463,6 @@ handle_data_viz_vars() {
     DCAI_NUM_VAL_TRAJS_VIZ="${DCAI_NUM_VAL_TRAJS_VIZ:-8}"
     DCAI_NUM_VAL_STEPS_VIZ="${DCAI_NUM_VAL_STEPS_VIZ:-2}"
 }
-
 
 check_variables() {
     for var in "$@"; do
