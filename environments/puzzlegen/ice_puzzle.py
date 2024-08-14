@@ -4,7 +4,8 @@ import cv2
 import imageio
 import networkx as nx
 import numpy as np
-from puzzlegen.base import PuzzleEnv
+
+from environments.puzzlegen.base import PuzzleEnv
 
 
 class IcePuzzle(PuzzleEnv):

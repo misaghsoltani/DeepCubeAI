@@ -8,9 +8,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn.functional as F
-from environments.environment_abstract import Environment, State
 from torch import Tensor, nn
+
 from utils.pytorch_models import Conv2dModel, FullyConnectedModel, ResnetModel, STEThresh
+
+from .environment_abstract import Environment, State
 
 
 class SokobanDQN(nn.Module):

@@ -4,8 +4,9 @@ from typing import Any, List, Optional, Tuple
 import numpy as np
 import torch
 import torch.nn.functional as F
-from puzzlegen.ice_puzzle import IcePuzzle
 from torch import Tensor, nn
+
+from environments.puzzlegen.ice_puzzle import IcePuzzle
 from utils.pytorch_models import Conv2dModel, FullyConnectedModel, ResnetConv2dModel, STEThresh
 
 from .environment_abstract import Environment, State

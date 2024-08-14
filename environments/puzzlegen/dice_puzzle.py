@@ -3,7 +3,8 @@ import os
 
 import cv2
 import numpy as np
-from puzzlegen.base import PuzzleEnv
+
+from environments.puzzlegen.base import PuzzleEnv
 
 
 class DicePuzzle(PuzzleEnv):
@@ -47,10 +48,9 @@ class DicePuzzle(PuzzleEnv):
         self.solution = path
 
         if self.render_style == "mnist":
-            data = np.loadtxt(
-                os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/mnist.csv"),
-                delimiter=",",
-            )
+            data = np.loadtxt(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                           "data/mnist.csv"),
+                              delimiter=",")
             self.targets = data[:, -1]
             self.images = 1.0 - data[:, :-1].reshape(-1, 8, 8, 1).astype(float) / 16.0
             self.texture = [
@@ -58,44 +58,29 @@ class DicePuzzle(PuzzleEnv):
             ][1:]
             self.player_rgb = (np.stack(
                 [0.923 * np.ones((8, 8)), 0.386 * np.ones((8, 8)), 0.209 * np.ones((8, 8))],
-                axis=-1,
-            ).astype(float) * 255.0)
+                axis=-1).astype(float) * 255.0)
             self.non_player_rgb = (np.stack(
                 [0.56 * np.ones((8, 8)), 0.692 * np.ones((8, 8)), 0.195 * np.ones((8, 8))],
-                axis=-1,
-            ).astype(float) * 255.0)
+                axis=-1).astype(float) * 255.0)
         elif self.render_style == "grid_world":
             self.player_rgb = (np.pad(np.ones((6, 6)), ((1, 1), (1, 1)),
                                       mode="constant",
                                       constant_values=0).reshape((8, 8, 1)).astype(float))
-            self.palette = [
-                [132.0, 94.0, 194.0],
-                [214.0, 93.0, 177.0],
-                [255.0, 111.0, 145.0],
-                [255.0, 150.0, 113.0],
-                [255.0, 199.0, 95.0],
-                [249.0, 248.0, 113.0],
-            ]
+            self.palette = [[132.0, 94.0, 194.0], [214.0, 93.0, 177.0], [255.0, 111.0, 145.0],
+                            [255.0, 150.0, 113.0], [255.0, 199.0, 95.0], [249.0, 248.0, 113.0]]
             self.palette = [
                 np.stack([np.stack([np.array(p)] * 8, axis=0)] * 8, axis=0).astype(float)
                 for p in self.palette
             ]
         elif self.render_style == "dice":
-            data = np.loadtxt(
-                os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/faces.csv"),
-                delimiter=",",
-            )
+            data = np.loadtxt(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                           "data/faces.csv"),
+                              delimiter=",")
             images = data.reshape((-1, 8, 8, 1)).astype(float)
             self.texture = [i for i in images]
             self.player_rgb = np.ones((8, 8, 3)).astype(float) * 255.0
-            self.palette = [
-                [132.0, 94.0, 194.0],
-                [214.0, 93.0, 177.0],
-                [255.0, 111.0, 145.0],
-                [255.0, 150.0, 113.0],
-                [255.0, 199.0, 95.0],
-                [249.0, 248.0, 113.0],
-            ]
+            self.palette = [[132.0, 94.0, 194.0], [214.0, 93.0, 177.0], [255.0, 111.0, 145.0],
+                            [255.0, 150.0, 113.0], [255.0, 199.0, 95.0], [249.0, 248.0, 113.0]]
             self.palette = [
                 np.stack([np.stack([np.array(p)] * 8, axis=0)] * 8, axis=0).astype(float)
                 for p in self.palette
@@ -106,14 +91,12 @@ class DicePuzzle(PuzzleEnv):
                     (8, 8)), np.zeros((8, 8))], axis=-1) * float(i) * (255.0 / 6.0)
                 for i in range(7)
             ][1:]
-            self.player_rgb = (np.stack(
-                [
-                    np.zeros((8, 8)),
-                    np.pad(np.ones((4, 4)), ((2, 2), (2, 2)), mode="constant", constant_values=0),
-                    np.zeros((8, 8)),
-                ],
-                axis=-1,
-            ).astype(float) * 255.0)
+            self.player_rgb = (np.stack([
+                np.zeros((8, 8)),
+                np.pad(np.ones((4, 4)), ((2, 2), (2, 2)), mode="constant", constant_values=0),
+                np.zeros((8, 8))
+            ],
+                                        axis=-1).astype(float) * 255.0)
         else:
             raise Exception("Unknown rendering mode.")
 
@@ -132,41 +115,35 @@ class DicePuzzle(PuzzleEnv):
 
     def _get_image(self):
         if self.render_style == "mnist":
-            rgb = np.concatenate(
-                [
-                    np.concatenate(
-                        [(self.player_rgb * self.texture[el - 1]
-                          if self.pos == (i, j) else self.non_player_rgb * self.texture[el - 1])
-                         for j, el in enumerate(row)],
-                        axis=1,
-                    ) for i, row in enumerate(self.grid)
-                ],
-                axis=0,
-            )
+            rgb = np.concatenate([
+                np.concatenate(
+                    [(self.player_rgb * self.texture[el - 1]
+                      if self.pos == (i, j) else self.non_player_rgb * self.texture[el - 1])
+                     for j, el in enumerate(row)],
+                    axis=1,
+                ) for i, row in enumerate(self.grid)
+            ],
+                                 axis=0)
         elif self.render_style == "grid_world":
-            rgb = np.concatenate(
-                [
-                    np.concatenate(
-                        [(self.palette[el - 1] *
-                          self.player_rgb if self.pos == (i, j) else self.palette[el - 1])
-                         for j, el in enumerate(row)],
-                        axis=1,
-                    ) for i, row in enumerate(self.grid)
-                ],
-                axis=0,
-            )
+            rgb = np.concatenate([
+                np.concatenate(
+                    [(self.palette[el - 1] *
+                      self.player_rgb if self.pos == (i, j) else self.palette[el - 1])
+                     for j, el in enumerate(row)],
+                    axis=1,
+                ) for i, row in enumerate(self.grid)
+            ],
+                                 axis=0)
         elif self.render_style == "dice":
-            rgb = np.concatenate(
-                [
-                    np.concatenate(
-                        [(self.player_rgb * self.texture[el - 1]
-                          if self.pos == (i, j) else self.palette[el - 1] * self.texture[el - 1])
-                         for j, el in enumerate(row)],
-                        axis=1,
-                    ) for i, row in enumerate(self.grid)
-                ],
-                axis=0,
-            )
+            rgb = np.concatenate([
+                np.concatenate(
+                    [(self.player_rgb * self.texture[el - 1]
+                      if self.pos == (i, j) else self.palette[el - 1] * self.texture[el - 1])
+                     for j, el in enumerate(row)],
+                    axis=1,
+                ) for i, row in enumerate(self.grid)
+            ],
+                                 axis=0)
             """
             # Slightly faster (~10%) but more complex way
             a = np.array(self.grid).reshape((-1, 1, 1)) - 1
@@ -177,19 +154,18 @@ class DicePuzzle(PuzzleEnv):
             rgb = np.moveaxis(rgb, 2, 1).reshape((self.size*8, self.size*8, 3))
             """
         elif self.render_style == "beta":
-            rgb = np.concatenate(
-                [
-                    np.concatenate(
-                        [(self.player_rgb +
-                          self.palette[el - 1] if self.pos == (i, j) else self.palette[el - 1])
-                         for j, el in enumerate(row)],
-                        axis=1,
-                    ) for i, row in enumerate(self.grid)
-                ],
-                axis=0,
-            )
+            rgb = np.concatenate([
+                np.concatenate(
+                    [(self.player_rgb +
+                      self.palette[el - 1] if self.pos == (i, j) else self.palette[el - 1])
+                     for j, el in enumerate(row)],
+                    axis=1,
+                ) for i, row in enumerate(self.grid)
+            ],
+                                 axis=0)
         else:
             raise Exception("Unknown rendering mode.")
+
         rescaled = cv2.resize(rgb, (64, 64), interpolation=cv2.INTER_NEAREST)
         render = np.clip(rescaled, 0, 255)
         return render.astype(np.uint8)
