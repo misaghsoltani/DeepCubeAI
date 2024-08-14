@@ -6,6 +6,7 @@ from typing import List, Tuple
 
 import numpy as np
 import torch
+
 from environments.environment_abstract import Environment
 from utils import env_utils, nnet_utils
 from utils.data_utils import print_args

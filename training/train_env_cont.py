@@ -5,12 +5,12 @@ import time
 from argparse import ArgumentParser
 from typing import Any, Dict, List, Tuple
 
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from environments.environment_abstract import Environment
 from torch import Tensor, nn, optim
 from torch.optim.optimizer import Optimizer
+
+from environments.environment_abstract import Environment
 from utils import data_utils, env_utils, nnet_utils
 from utils.data_utils import print_args
 
@@ -298,10 +298,8 @@ def train_nnet(nnet: nn.Module, nnet_dir: str, state_episodes_train: List[np.nda
                 state_episodes_val, action_episodes_val, episode_lens_val, batch_size_eff,
                 num_steps)
 
-            loss_val, loss_steps_val, state_trajs_nnet = step_model(nnet, state_episodes_val,
-                                                                    action_episodes_val,
-                                                                    start_idxs_val, device,
-                                                                    num_steps)
+            loss_val, loss_steps_val, _ = step_model(nnet, state_episodes_val, action_episodes_val,
+                                                     start_idxs_val, device, num_steps)
 
             print("Validation")
             for step, loss_step in enumerate(loss_steps_val):

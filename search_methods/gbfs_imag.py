@@ -8,9 +8,10 @@ from typing import Any, Dict, List, Set, Tuple, Union
 
 import numpy as np
 import torch
+from torch import nn
+
 from environments.environment_abstract import Environment, State
 from environments.sokoban import SokobanState
-from torch import nn
 from utils import data_utils, env_utils, misc_utils, nnet_utils
 from utils.imag_utils import random_walk
 
@@ -302,15 +303,9 @@ def process_sokoban_state(
     state_goals_i_enc_np = state_goals_i_enc.cpu().data.numpy()
 
     states_enc_np = np.repeat(state_enc_np, state_goals_i_enc_np.shape[0], axis=0)
-    is_solved_all, num_steps_all = gbfs(
-        heuristic_fn,
-        model_fn,
-        states_enc_np,
-        state_goals_i_enc_np,
-        args.per_eq_tol,
-        args.search_itrs,
-        device,
-    )
+    is_solved_all, num_steps_all = gbfs(heuristic_fn, model_fn, states_enc_np,
+                                        state_goals_i_enc_np, args.per_eq_tol, args.search_itrs,
+                                        device)
 
     if np.max(is_solved_all):
         is_solved = True
@@ -351,15 +346,8 @@ def process_other_state(
     state_goal_enc = encoder(torch.tensor(state_goal_real, device=device).float())[1]
     state_goal_enc_np = state_goal_enc.cpu().data.numpy()
 
-    is_solved_all, num_steps_all = gbfs(
-        heuristic_fn,
-        model_fn,
-        state_enc_np,
-        state_goal_enc_np,
-        args.per_eq_tol,
-        args.search_itrs,
-        device,
-    )
+    is_solved_all, num_steps_all = gbfs(heuristic_fn, model_fn, state_enc_np, state_goal_enc_np,
+                                        args.per_eq_tol, args.search_itrs, device)
     is_solved = is_solved_all[0]
     num_steps = num_steps_all[0]
 
@@ -532,8 +520,7 @@ def parse_arguments() -> Namespace:
         "--per_eq_tol",
         type=float,
         required=True,
-        help="Percent of latent state elements that need to be equal to declare equal",
-    )
+        help="Percent of latent state elements that need to be equal to declare equal")
     parser.add_argument("--results_dir", type=str, required=True, help="Directory to save results")
     parser.add_argument("--nnet_batch_size", type=int, default=None, help="")
     parser.add_argument("--debug", action="store_true", default=False, help="Set when debugging")

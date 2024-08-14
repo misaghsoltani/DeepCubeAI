@@ -28,15 +28,8 @@ class IceSliderDQN(nn.Module):
     def _forward_unimplemented(self, *input_val: Any) -> None:
         pass
 
-    def __init__(
-        self,
-        chan_enc: int,
-        enc_hw: Tuple[int, int],
-        resnet_chan: int,
-        num_resnet_blocks: int,
-        num_actions: int,
-        batch_norm: bool,
-    ):
+    def __init__(self, chan_enc: int, enc_hw: Tuple[int, int], resnet_chan: int,
+                 num_resnet_blocks: int, num_actions: int, batch_norm: bool):
         super().__init__()
 
         self.chan_enc: int = chan_enc
@@ -233,14 +226,8 @@ class EnvModel(nn.Module):
     def _forward_unimplemented(self, *input_val: Any) -> None:
         pass
 
-    def __init__(
-        self,
-        chan_enc: int,
-        enc_hw: Tuple[int, int],
-        resnet_chan: int,
-        num_resnet_blocks: int,
-        num_actions: int,
-    ):
+    def __init__(self, chan_enc: int, enc_hw: Tuple[int, int], resnet_chan: int,
+                 num_resnet_blocks: int, num_actions: int):
         super().__init__()
 
         self.chan_enc: int = chan_enc
@@ -330,14 +317,8 @@ class EnvModelContinuous(nn.Module):
     def _forward_unimplemented(self, *input_val: Any) -> None:
         pass
 
-    def __init__(
-        self,
-        chan_in: int,
-        chan_enc: int,
-        resnet_chan: int,
-        num_resnet_blocks: int,
-        num_actions: int,
-    ):
+    def __init__(self, chan_in: int, chan_enc: int, resnet_chan: int, num_resnet_blocks: int,
+                 num_actions: int):
         super().__init__()
 
         self.chan_in: int = chan_in

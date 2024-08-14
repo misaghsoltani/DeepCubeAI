@@ -6,6 +6,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 from utils.viz_utils import Quaternion, project_points
 
 

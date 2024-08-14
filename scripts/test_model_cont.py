@@ -7,8 +7,9 @@ from typing import Any, Dict, List, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from environments.environment_abstract import Environment
 from torch import nn
+
+from environments.environment_abstract import Environment
 from utils import env_utils, nnet_utils
 from utils.data_utils import print_args
 
@@ -28,12 +29,10 @@ def parse_arguments(parser: ArgumentParser) -> Dict[str, Any]:
                         type=str,
                         required=True,
                         help="Directory of environment model")
-    parser.add_argument(
-        "--print_interval",
-        type=int,
-        default=1,
-        help="The interval of printing the info and saving states to image files",
-    )
+    parser.add_argument("--print_interval",
+                        type=int,
+                        default=1,
+                        help="The interval of printing the info and saving states to image files")
 
     args = parser.parse_args()
     args_dict: Dict[str, Any] = vars(args)
@@ -91,8 +90,7 @@ def get_next_states(state_episodes: List[np.ndarray], start_idxs: np.array,
     """
     return np.stack(
         [state_episode[idx + step + 1] for state_episode, idx in zip(state_episodes, start_idxs)],
-        axis=0,
-    )
+        axis=0)
 
 
 def calculate_se(states_next_np: np.ndarray,

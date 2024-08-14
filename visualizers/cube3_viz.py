@@ -9,8 +9,9 @@ import re
 
 import matplotlib.pyplot as plt
 import numpy as np
-from environments.cube3 import Cube3, Cube3State
 from matplotlib import widgets
+
+from environments.cube3 import Cube3, Cube3State
 from utils.viz_utils import Quaternion, project_points
 
 

@@ -165,7 +165,7 @@ class Environment(ABC):
         self,
         num_steps_l: List[float],
         start_level_seed: Optional[int] = -1,
-        num_levels: Optional[int] = -1,
+        num_levels: Optional[int] = -1
     ) -> Tuple[List[State], List[State], List[List[State]], List[List[int]]]:
         """Generate episodes based on the given parameters.
 

@@ -2,6 +2,7 @@ import pickle
 from typing import Dict, List
 
 import numpy as np
+
 from environments.sokoban import SokobanState
 
 

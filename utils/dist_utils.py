@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from torch.distributed import destroy_process_group, init_process_group, rpc
 from torch.multiprocessing import Queue, get_context
+
 from utils import misc_utils, nnet_utils
 from utils.data_utils import Logger
 from utils.update_utils import q_learning_runner
@@ -280,19 +281,15 @@ def setup_ddp(master_addr: str, master_port: int, rank: int, world_size: int) ->
         rank (int): Rank of the current process.
         world_size (int): Total number of processes.
     """
-    init_process_group(
-        backend="cpu:gloo,cuda:nccl",
-        rank=rank,
-        world_size=world_size,
-        init_method=_get_init_method_str(master_addr, master_port),
-    )
+    init_process_group(backend="cpu:gloo,cuda:nccl",
+                       rank=rank,
+                       world_size=world_size,
+                       init_method=_get_init_method_str(master_addr, master_port))
 
     name = f"worker{rank + 1}"
     ctx = get_context("spawn")
-    proc = ctx.Process(
-        target=_setup_rpc,
-        args=(name, master_addr, master_port + 1, rank + 1, world_size + 1, True),
-    )
+    proc = ctx.Process(target=_setup_rpc,
+                       args=(name, master_addr, master_port + 1, rank + 1, world_size + 1, True))
     proc.daemon = True
     proc.start()
 

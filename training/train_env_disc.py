@@ -9,9 +9,10 @@ from typing import Any, Dict, List, OrderedDict, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from environments.environment_abstract import Environment
 from torch import Tensor, nn, optim
 from torch.optim.optimizer import Optimizer
+
+from environments.environment_abstract import Environment
 from utils import data_utils, env_utils, nnet_utils
 from utils.data_utils import print_args
 

@@ -100,13 +100,11 @@ def main():
 
         pylab.plot(x_ave, y_ave, label=f"{exp_name}", lw=2, linestyle=exp_ls[exp_idx])
 
-    lgd = pylab.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.22),
-        ncol=3,
-        fontsize="medium",
-        title="Number of Scrambles",
-    )
+    lgd = pylab.legend(loc="upper center",
+                       bbox_to_anchor=(0.5, 1.22),
+                       ncol=3,
+                       fontsize="medium",
+                       title="Number of Scrambles")
     pylab.ylabel("Percent Solved with Greedy Best-First Search", fontsize="large")
     pylab.xlabel("Iteration", fontsize="large")
     pylab.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))

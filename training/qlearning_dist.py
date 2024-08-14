@@ -10,12 +10,13 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import torch
 import torch.distributed
-from environments.environment_abstract import Environment
-from search_methods.gbfs_imag import gbfs, gbfs_test
 from torch import Tensor, nn, optim
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.optimizer import Optimizer
 from torch.utils.tensorboard import SummaryWriter
+
+from environments.environment_abstract import Environment
+from search_methods.gbfs_imag import gbfs, gbfs_test
 from utils import data_utils, dist_utils, env_utils, imag_utils, misc_utils, nnet_utils
 from utils.data_utils import print_args
 
@@ -502,7 +503,7 @@ def main():
 
         # torch.cuda.empty_cache()
 
-        # do q-learning
+        # do Q-learning
         # train
         num_train_itrs: int = int(np.ceil(num_exs / argsd["batch_size"]))
         print(f"Training model for update number {update_num} for {num_train_itrs} iterations")
@@ -527,16 +528,16 @@ def main():
             env_model.eval()
             max_gbfs_steps: int = min(update_num + 1, argsd["goal_steps"])
 
-            print(f"\nTesting with {max_gbfs_steps} GBFS steps")
-            print(f"Fixed test states ({states_start_t_np.shape[0]})")
+            print(f"\nTesting with {max_gbfs_steps} GBFS steps\n"
+                  f"Fixed test states ({states_start_t_np.shape[0]})")
 
             is_solved_fixed, _ = gbfs(dqn_unwrapped, env_model, states_start_t_np,
                                       states_goal_t_np, argsd["per_eq_tol"], max_gbfs_steps,
                                       device)
             per_solved_fixed = 100 * float(sum(is_solved_fixed)) / float(len(is_solved_fixed))
 
-            print(f"Greedy policy solved: {per_solved_fixed}")
-            print(f"Greedy policy solved (best): {per_solved_best}")
+            print(f"Greedy policy solved: {per_solved_fixed}\n"
+                  f"Greedy policy solved (best): {per_solved_best}")
 
             if per_solved_fixed > per_solved_best:
                 per_solved_best = per_solved_fixed
@@ -549,8 +550,8 @@ def main():
                       env.num_actions_max, argsd["goal_steps"], device, max_gbfs_steps,
                       argsd["per_eq_tol"])
 
-            # writer.add_scalar('per_solved', per_solved, itr)
-            # writer.flush()
+            writer.add_scalar('per_solved', per_solved_fixed, itr)
+            writer.flush()
 
             print(f"Test time: {(time.time() - start_time):.2f}\n"
                   f"Last loss was {last_loss}")

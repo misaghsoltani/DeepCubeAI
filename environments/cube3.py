@@ -7,6 +7,7 @@ import torch
 import torch.nn.functional as F
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from torch import Tensor, nn
+
 from utils.pytorch_models import FullyConnectedModel, ResnetModel, STEThresh
 from visualizers.cube3_viz_simple import InteractiveCube
 
@@ -19,16 +20,8 @@ class Cube3FCResnet(nn.Module):
     def _forward_unimplemented(self, *input_val: Any) -> None:
         pass
 
-    def __init__(
-        self,
-        input_dim: int,
-        h1_dim: int,
-        resnet_dim: int,
-        num_resnet_blocks: int,
-        out_dim: int,
-        batch_norm: bool,
-        act_fn: str,
-    ):
+    def __init__(self, input_dim: int, h1_dim: int, resnet_dim: int, num_resnet_blocks: int,
+                 out_dim: int, batch_norm: bool, act_fn: str):
         """
         Initializes the Cube3FCResnet model.
 
@@ -68,15 +61,8 @@ class Cube3DQN(nn.Module):
     def _forward_unimplemented(self, *input_val: Any) -> None:
         pass
 
-    def __init__(
-        self,
-        state_dim: int,
-        h1_dim: int,
-        resnet_dim: int,
-        num_res_blocks: int,
-        out_dim: int,
-        batch_norm: bool,
-    ):
+    def __init__(self, state_dim: int, h1_dim: int, resnet_dim: int, num_res_blocks: int,
+                 out_dim: int, batch_norm: bool):
         """
         Initializes the Cube3DQN model.
 

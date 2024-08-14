@@ -9,10 +9,11 @@ from typing import Dict, List, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from torch import nn
+
 from environments.environment_abstract import Environment
 from scripts.test_model_cont import step_model as step_model_cont
 from scripts.test_model_disc import step_model as step_model_disc
-from torch import nn
 from utils import data_utils, env_utils, nnet_utils
 from utils.data_utils import print_args
 

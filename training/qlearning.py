@@ -10,11 +10,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from environments.environment_abstract import Environment
-from search_methods.gbfs_imag import gbfs, gbfs_test
 from torch import Tensor
 from torch.optim.optimizer import Optimizer
 from torch.utils.tensorboard import SummaryWriter
+
+from environments.environment_abstract import Environment
+from search_methods.gbfs_imag import gbfs, gbfs_test
 from utils import data_utils, env_utils, imag_utils, misc_utils, nnet_utils
 from utils.data_utils import print_args
 from utils.update_utils import q_update
@@ -435,13 +436,13 @@ def main():
         dqn.eval()
         env_model.eval()
         max_gbfs_steps: int = min(update_num + 1, argsd["goal_steps"])
-        print(f"\nTesting with {max_gbfs_steps} GBFS steps")
-        print(f"Fixed test states ({states_start_t_np.shape[0]})")
+        print(f"\nTesting with {max_gbfs_steps} GBFS steps\n"
+              f"Fixed test states ({states_start_t_np.shape[0]})")
         is_solved_fixed, _ = gbfs(dqn, env_model, states_start_t_np, states_goal_t_np,
                                   argsd["per_eq_tol"], max_gbfs_steps, device)
         per_solved_fixed = 100 * float(sum(is_solved_fixed)) / float(len(is_solved_fixed))
-        print(f"Greedy policy solved: {per_solved_fixed}")
-        print(f"Greedy policy solved (best): {per_solved_best}")
+        print(f"Greedy policy solved: {per_solved_fixed}\n"
+              f"Greedy policy solved (best): {per_solved_best}")
         if per_solved_fixed > per_solved_best:
             per_solved_best = per_solved_fixed
             update_nnet: bool = True
@@ -451,8 +452,8 @@ def main():
         print("Generated test states")
         gbfs_test(states_offline_np, argsd["num_test"], dqn, env_model, env.num_actions_max,
                   argsd["goal_steps"], device, max_gbfs_steps, argsd["per_eq_tol"])
-        # writer.add_scalar('per_solved', per_solved, itr)
-        # writer.flush()
+        writer.add_scalar('per_solved', per_solved_fixed, itr)
+        writer.flush()
         print(f"Test time: {time.time() - start_time:.2f}")
 
         # clear cuda memory

@@ -6,8 +6,9 @@ from argparse import ArgumentParser
 from typing import List, Tuple
 
 import numpy as np
-from environments.environment_abstract import Environment, State
 from torch.multiprocessing import Process, Queue, get_context
+
+from environments.environment_abstract import Environment, State
 from utils import env_utils
 from utils.data_utils import Logger, get_file_path_without_extension, print_args
 

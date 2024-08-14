@@ -7,8 +7,9 @@ from typing import Any, Dict, List, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from environments.environment_abstract import Environment
 from torch import nn
+
+from environments.environment_abstract import Environment
 from utils import env_utils, nnet_utils
 from utils.data_utils import print_args
 
@@ -28,12 +29,10 @@ def parse_arguments(parser: ArgumentParser) -> Dict[str, Any]:
                         type=str,
                         required=True,
                         help="Directory of environment model")
-    parser.add_argument(
-        "--print_interval",
-        type=int,
-        default=1,
-        help="The interval of printing the info saving states to image files",
-    )
+    parser.add_argument("--print_interval",
+                        type=int,
+                        default=1,
+                        help="The interval of printing the info saving states to image files")
 
     args = parser.parse_args()
     args_dict: Dict[str, Any] = vars(args)
@@ -96,8 +95,7 @@ def get_ground_truth_next_state(state_episodes: List[np.ndarray], start_idxs: np
     """
     states_next_np = np.stack(
         [state_episode[idx + step + 1] for state_episode, idx in zip(state_episodes, start_idxs)],
-        axis=0,
-    )
+        axis=0)
     states_next = torch.tensor(states_next_np, device=device).float().contiguous()
     return states_next, states_next_np
 
@@ -351,18 +349,8 @@ def main():
     print(f"Test images will be saved to '{save_dir}'")
 
     print(f"{len(state_episodes)} episodes, {num_steps} steps")
-    step_model(
-        enc_model,
-        env_model,
-        dec_model,
-        state_episodes,
-        action_episodes,
-        start_idxs,
-        device,
-        num_steps,
-        args_dict["print_interval"],
-        save_dir,
-    )
+    step_model(enc_model, env_model, dec_model, state_episodes, action_episodes, start_idxs,
+               device, num_steps, args_dict["print_interval"], save_dir)
 
     print("Done")
 

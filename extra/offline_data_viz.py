@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
+
 from utils.data_utils import print_args
 
 
@@ -115,30 +116,22 @@ def parse_arguments(parser: ArgumentParser) -> Dict[str, Any]:
     parser.add_argument("--train_data", type=str, required=True, help="Location of training data")
     parser.add_argument("--val_data", type=str, required=True, help="Location of validation data")
 
-    parser.add_argument(
-        "--num_train_trajs",
-        type=int,
-        default=100,
-        help="Number of random training trajectories to visualize",
-    )
-    parser.add_argument(
-        "--num_train_steps",
-        type=int,
-        default=100,
-        help="Number of random training steps to visualize per trajectory",
-    )
-    parser.add_argument(
-        "--num_val_trajs",
-        type=int,
-        default=100,
-        help="Number of random validation trajectories to visualize",
-    )
-    parser.add_argument(
-        "--num_val_steps",
-        type=int,
-        default=100,
-        help="Number of random validation steps to visualize per trajectory",
-    )
+    parser.add_argument("--num_train_trajs",
+                        type=int,
+                        default=100,
+                        help="Number of random training trajectories to visualize")
+    parser.add_argument("--num_train_steps",
+                        type=int,
+                        default=100,
+                        help="Number of random training steps to visualize per trajectory")
+    parser.add_argument("--num_val_trajs",
+                        type=int,
+                        default=100,
+                        help="Number of random validation trajectories to visualize")
+    parser.add_argument("--num_val_steps",
+                        type=int,
+                        default=100,
+                        help="Number of random validation steps to visualize per trajectory")
     parser.add_argument("--save_imgs",
                         type=str,
                         default="sample_images",
@@ -232,22 +225,10 @@ def main() -> None:
     # unique_val_states_actions = unique_val_states_actions_np[unique_val_episodes_idxs[:, None],
     #   unique_val_steps_idxs]
 
-    plot_images(
-        unique_train_states,
-        args_dict["train_imgs_save_dir"],
-        train_actions_np,
-        unique_train_episodes_idxs,
-        unique_train_steps_idxs,
-        args_dict["env"],
-    )
-    plot_images(
-        unique_val_states,
-        args_dict["val_imgs_save_dir"],
-        val_actions_np,
-        unique_val_episodes_idxs,
-        unique_val_steps_idxs,
-        args_dict["env"],
-    )
+    plot_images(unique_train_states, args_dict["train_imgs_save_dir"], train_actions_np,
+                unique_train_episodes_idxs, unique_train_steps_idxs, args_dict["env"])
+    plot_images(unique_val_states, args_dict["val_imgs_save_dir"], val_actions_np,
+                unique_val_episodes_idxs, unique_val_steps_idxs, args_dict["env"])
 
     print("\nAll of the sample images are saved to file.")
 

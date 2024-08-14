@@ -7,9 +7,10 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
-from environments.environment_abstract import Environment
 from torch import Tensor, nn
 from torch.multiprocessing import get_context
+
+from environments.environment_abstract import Environment
 from utils import env_utils, imag_utils, misc_utils, nnet_utils
 from utils.data_utils import print_args
 
