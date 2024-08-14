@@ -23,36 +23,30 @@ def parse_arguments(parser: ArgumentParser) -> Dict[str, Any]:
 
     parser.add_argument("--results_dir", type=str, required=True, help="Directory to save results")
     parser.add_argument("--start_idx", type=int, default=None, help="")
-    parser.add_argument(
-        "--nnet_batch_size",
-        type=int,
-        default=None,
-        help="Set to control how many states per GPU are "
-        "evaluated by the neural network at a time. "
-        "Does not affect final results, "
-        "but will help if nnet is running out of "
-        "memory.",
-    )
-    parser.add_argument(
-        "--per_eq_tol",
-        type=float,
-        required=True,
-        help="Percent of latent state elements that need to "
-        "be equal to declare equal",
-    )
+    parser.add_argument("--nnet_batch_size",
+                        type=int,
+                        default=None,
+                        help="Set to control how many states per GPU are "
+                        "evaluated by the neural network at a time. "
+                        "Does not affect final results, "
+                        "but will help if nnet is running out of "
+                        "memory.")
+    parser.add_argument("--per_eq_tol",
+                        type=float,
+                        required=True,
+                        help="Percent of latent state elements that need to "
+                        "be equal to declare equal")
     parser.add_argument("--verbose", action="store_true", default=False, help="Set for verbose")
     parser.add_argument("--debug", action="store_true", default=False, help="Set when debugging")
 
     # If provided as --save_imgs 'True', then args.save_imgs will be 'True'
     # If provided as --save_imgs (without any value), then args.save_imgs will be True
     # If is not provided --save_imgs at all, then args.save_imgs will be False
-    parser.add_argument(
-        "--save_imgs",
-        nargs="?",
-        const=True,
-        default=False,
-        help="Save the images of the steps of solving each state to file",
-    )
+    parser.add_argument("--save_imgs",
+                        nargs="?",
+                        const=True,
+                        default=False,
+                        help="Save the images of the steps of solving each state to file")
 
     # parse arguments
     args = parser.parse_args()
@@ -76,12 +70,7 @@ def main():
     debug = args_dict.pop("debug")
 
     args_list: List[str] = args_to_list({f"--{key}": value for key, value in args_dict.items()})
-    args_qstar_main: List[str] = [
-        "--weight",
-        "1.0",
-        "--h_weight",
-        "0.0",
-    ]
+    args_qstar_main: List[str] = ["--weight", "1.0", "--h_weight", "0.0"]
 
     args_lsit = args_qstar_main + args_list
 
