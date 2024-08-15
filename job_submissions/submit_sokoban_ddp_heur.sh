@@ -1,12 +1,12 @@
 #!/bin/sh
-#SBATCH --job-name=cube3_dist_heur
+#SBATCH --job-name=sokoban_dist_heur
 #SBATCH -N 10
 #SBATCH -D /project/dir/
 #SBATCH --gres=gpu:2
 #SBATCH --ntasks-per-node=2
 #SBATCH --cpus-per-task=14
-#SBATCH --output=job_run_outputs/cube3_dist_heur_job%j.out
-#SBATCH --error=job_run_outputs/cube3_dist_heur_job%j.err
+#SBATCH --output=job_run_outputs/sokoban_dist_heur_job%j.out
+#SBATCH --error=job_run_outputs/sokoban_dist_heur_job%j.err
 #SBATCH -p partition_name
 
 # #SBATCH --mail-user=username@email.com
@@ -124,10 +124,10 @@ run_pipeline() {
 }
 
 
-ENV=cube3
-DATA_DIR=cube3
-ENV_MODEL_NAME_DISC=cube3_disc
-HEUR_NNET_NAME=cube3_heur_dist
+ENV=sokoban
+DATA_DIR=sokoban
+ENV_MODEL_NAME_DISC=sokoban_disc
+HEUR_NNET_NAME=sokoban_heur_dist
 DATA_FILE_NAME_TRAIN_VAL=s0-1k_stp20
 PER_EQ_TOL=100
 

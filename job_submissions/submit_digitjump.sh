@@ -3,12 +3,13 @@
 #SBATCH -N 1
 #SBATCH -D /project/dir/
 #SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=5
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=28
 #SBATCH --output=job_run_outputs/digitjump_job%j.out
 #SBATCH --error=job_run_outputs/digitjump_job%j.err
-#SBATCH -p dgx_aic
+#SBATCH -p partition_name
 
-# #SBATCH --mail-user=msoltani@email.sc.edu
+# #SBATCH --mail-user=username@email.com
 # #SBATCH --mail-type=END
 # #SBATCH --exclusive  # Allocate all resources on the node
 
@@ -18,8 +19,8 @@ export PYTHONUNBUFFERED=TRUE
 # Load modules
 # module load python3/anaconda/2023.9
 source ~/.bash_profile
-conda activate /work/msoltani/ENVS/deepcube_env
-cd /work/msoltani/projects/DeepCubeConstrained_final_0
+conda activate DeepCubeAI_env
+cd /project/dir/
 #module load cuda/12.3
 source /project/dir/setup.sh
 
@@ -128,14 +129,14 @@ ENV_MODEL_NAME_DISC=digitjump_disc
 ENV_MODEL_NAME_CONT=digitjump_cont
 ENV_MODEL_DIR_DISC=saved_env_models/${ENV_MODEL_NAME_DISC}
 ENV_MODEL_DIR_CONT=saved_env_models/${ENV_MODEL_NAME_CONT}
-HEUR_NNET_NAME=digitjump_heur_2
+HEUR_NNET_NAME=digitjump_heur
 DATA_FILE_NAME_TRAIN_VAL=s0-1k_stp20
 DATA_FILE_NAME_MODEL_TEST=s5k-5.1k_stp1k
 DATA_FILE_NAME_MODEL_TEST_PLOT=s5k-5.1k_stp10k
 DATA_FILE_NAME_SEARCH_TEST=s2k-2.1k
 QSTAR_WEIGHT=0.7
 QSTAR_H_WEIGHT=1.0
-QSTAR_BATCH_SIZE=2
+QSTAR_BATCH_SIZE=1
 UCS_BATCH_SIZE=100000
 current_time=$(date +"%Y%m%d_%H%M%S%3N")
 RESULTS_DIR_QSTAR="model=${ENV_MODEL_NAME_DISC}__heur=${HEUR_NNET_NAME}__QSTAR_results/path_cost_weight=${QSTAR_WEIGHT}__h_weight=${QSTAR_H_WEIGHT}__batchsize=${QSTAR_BATCH_SIZE}_${current_time}"
@@ -150,7 +151,7 @@ CMD_TRAIN_VAL="bash scripts/pipeline.sh --stage gen_offline \
                                         --data_dir $DATA_DIR \
                                         --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
                                         --num_offline_steps 20 \
-                                        --num_train_eps 20000 \
+                                        --num_train_eps 20_000 \
                                         --num_val_eps 5000 \
                                         --num_cpus $SLURM_CPUS_ON_NODE \
                                         --start_level 0 \

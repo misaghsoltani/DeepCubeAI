@@ -2,19 +2,16 @@
 #SBATCH --job-name=cube3
 #SBATCH -N 1
 #SBATCH -D /project/dir/
-#SBATCH --gres=gpu:2
-#SBATCH --cpus-per-task=20
+#SBATCH --gres=gpu:1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=28
 #SBATCH --output=job_run_outputs/cube3_job%j.out
 #SBATCH --error=job_run_outputs/cube3_job%j.err
-#SBATCH -p dgx_aic
+#SBATCH -p partition_name
 
-# #SBATCH --mail-user=msoltani@email.sc.edu
+# #SBATCH --mail-user=username@email.com
 # #SBATCH --mail-type=END
 # #SBATCH --exclusive  # Allocate all resources on the node
-
-# set to use first visible GPU in the machine
-# export CUDA VISIBLE DEVICES=0
-# xport CUDA_VISIBLE_DEVICES=0,1
 
 # the environment variable PYTHONUNBUFFERED to set unbuffered I/O for the whole batch script
 export PYTHONUNBUFFERED=TRUE
@@ -75,8 +72,6 @@ print_system_info() {
 
 # Print system information
 print_system_info
-
-# sh scripts/pipeline.sh qstar cube3 30 cube3 cube3 10000 50000000 30 30 30 1 data/cube3/test/data.pkl 100 0.8 cube3
 
 run_pipeline() {
 
@@ -141,8 +136,8 @@ DATA_FILE_NAME_MODEL_TEST_PLOT=0.1k_stp10k
 DATA_FILE_NAME_SEARCH_TEST=0.1k
 QSTAR_WEIGHT=0.6
 QSTAR_H_WEIGHT=1.0
-QSTAR_BATCH_SIZE=10000
-UCS_BATCH_SIZE=10000
+QSTAR_BATCH_SIZE=10_000
+UCS_BATCH_SIZE=10_000
 current_time=$(date +"%Y%m%d_%H%M%S%3N")
 RESULTS_DIR_QSTAR="model=${ENV_MODEL_NAME_DISC}__heur=${HEUR_NNET_NAME}__QSTAR_results/path_cost_weight=${QSTAR_WEIGHT}__h_weight=${QSTAR_H_WEIGHT}__batchsize=${QSTAR_BATCH_SIZE}_${current_time}"
 RESULTS_DIR_UCS="model=${ENV_MODEL_NAME_DISC}__UCS_results/batchsize=${UCS_BATCH_SIZE}_${current_time}"
@@ -179,7 +174,7 @@ CMD_SEARCH_TEST="bash scripts/pipeline.sh --stage gen_search_test \
                                           --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
                                           --num_test_eps 100 \
                                           --num_cpus $SLURM_CPUS_ON_NODE \
-                                          --start_level 10000"
+                                          --start_level 10_000"
 
 CMD_TRAIN_ENV_DISC="bash scripts/pipeline.sh --stage train_model \
                                              --env $ENV \
@@ -193,7 +188,7 @@ CMD_TEST_ENV_DISC="bash scripts/pipeline.sh --stage test_model \
                                             --data_dir $DATA_DIR \
                                             --data_file_name $DATA_FILE_NAME_MODEL_TEST \
                                             --env_model_name $ENV_MODEL_NAME_DISC \
-                                            --print_interval 50"
+                                            --print_interval 100"
 
 CMD_TRAIN_ENV_CONT="bash scripts/pipeline.sh --stage train_model_cont \
                                              --env $ENV \
@@ -207,7 +202,7 @@ CMD_TEST_ENV_CONT="bash scripts/pipeline.sh --stage test_model_cont \
                                              --data_dir $DATA_DIR \
                                              --data_file_name $DATA_FILE_NAME_MODEL_TEST \
                                              --env_model_name $ENV_MODEL_NAME_CONT \
-                                             --print_interval 50"
+                                             --print_interval 100"
 
 CMD_ENCODE_OFFLINE="bash scripts/pipeline.sh --stage encode_offline \
                                              --env $ENV \
@@ -270,8 +265,8 @@ CMD_QSTAR="bash scripts/pipeline.sh --stage qstar \
                                     --qstar_h_weight $QSTAR_H_WEIGHT \
                                     --per_eq_tol $PER_EQ_TOL \
                                     --qstar_results_dir $RESULTS_DIR_QSTAR \
-                                    --search_test_data /project/dir/data/cube3/search_test/data_solved.pkl \
-                                    --save_imgs false"
+                                    --search_test_data /project/dir/data/cube3/search_test/data.pkl \
+                                    --save_imgs true"
 
 CMD_UCS="bash scripts/pipeline.sh --stage ucs \
                                   --env $ENV \
@@ -279,7 +274,7 @@ CMD_UCS="bash scripts/pipeline.sh --stage ucs \
                                   --ucs_batch_size $UCS_BATCH_SIZE \
                                   --per_eq_tol $PER_EQ_TOL \
                                   --ucs_results_dir $RESULTS_DIR_UCS \
-                                  --search_test_data /project/dir/data/cube3/search_test/data_solved.pkl \
+                                  --search_test_data /project/dir/data/cube3/search_test/data.pkl \
                                   --save_imgs true"
 
 CMD_GBFS="bash scripts/pipeline.sh --stage gbfs \
@@ -288,7 +283,7 @@ CMD_GBFS="bash scripts/pipeline.sh --stage gbfs \
                                    --heur_nnet_name $HEUR_NNET_NAME \
                                    --per_eq_tol $PER_EQ_TOL \
                                    --gbfs_results_dir $RESULTS_DIR_GBFS \
-                                   --search_test_data /project/dir/data/cube3/search_test/data_solved.pkl \
+                                   --search_test_data /project/dir/data/cube3/search_test/data.pkl \
                                    --search_itrs 100"
 
 CMD_VIZ_DATA="bash scripts/pipeline.sh --stage visualize_data \
@@ -362,8 +357,8 @@ run_pipeline "$CMD_TRAIN_HEUR"
 # qstar
 run_pipeline "$CMD_QSTAR"
 
-# # # ucs
-# # run_pipeline "$CMD_UCS"
+# # ucs
+# run_pipeline "$CMD_UCS"
 
 # gbfs
 run_pipeline "$CMD_GBFS"

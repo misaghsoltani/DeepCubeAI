@@ -2,13 +2,14 @@
 #SBATCH --job-name=sokoban
 #SBATCH -N 1
 #SBATCH -D /project/dir/
-#SBATCH --gres=gpu:2
-#SBATCH --cpus-per-task=14
+#SBATCH --gres=gpu:1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=28
 #SBATCH --output=job_run_outputs/sokoban_job%j.out
 #SBATCH --error=job_run_outputs/sokoban_job%j.err
-#SBATCH -p dgx_aic
+#SBATCH -p partition_name
 
-# #SBATCH --mail-user=msoltani@email.sc.edu
+# #SBATCH --mail-user=username@email.com
 # #SBATCH --mail-type=END
 # #SBATCH --exclusive  # Allocate all resources on the node
 
@@ -265,7 +266,7 @@ CMD_QSTAR="bash scripts/pipeline.sh --stage qstar \
                                     --per_eq_tol $PER_EQ_TOL \
                                     --qstar_results_dir $RESULTS_DIR_QSTAR \
                                     --search_test_data "/project/dir/data/sokoban/search_test/data.pkl" \
-                                    --save_imgs false"
+                                    --save_imgs true"
 
 CMD_UCS="bash scripts/pipeline.sh --stage ucs \
                                   --env $ENV \
@@ -329,8 +330,8 @@ run_pipeline "$CMD_ENV_MODEL_TEST"
 # gen_offline_test (10K steps for plotting)
 run_pipeline "$CMD_ENV_MODEL_TEST_PLOT"
 
-# gen_search_test
-run_pipeline "$CMD_SEARCH_TEST"
+# # gen_search_test
+# run_pipeline "$CMD_SEARCH_TEST"
 
 # train_model
 run_pipeline "$CMD_TRAIN_ENV_DISC"

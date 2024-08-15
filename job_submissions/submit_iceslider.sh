@@ -1,15 +1,15 @@
 #!/bin/sh
-#SBATCH --job-name=iceslider_dist_heur_NO_OOD
-#SBATCH -N 6
+#SBATCH --job-name=iceslider
+#SBATCH -N 1
 #SBATCH -D /project/dir/
-#SBATCH --gres=gpu:2
-#SBATCH --ntasks-per-node=2
-#SBATCH --cpus-per-task=14
-#SBATCH --output=job_run_outputs/iceslider_dist_heur_NO_OOD_job%j.out
-#SBATCH --error=job_run_outputs/iceslider_dist_heur_NO_OOD_job%j.err
-#SBATCH -p dgx_aic
+#SBATCH --gres=gpu:1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=28
+#SBATCH --output=job_run_outputs/iceslider_job%j.out
+#SBATCH --error=job_run_outputs/iceslider_job%j.err
+#SBATCH -p partition_name
 
-# #SBATCH --mail-user=msoltani@email.sc.edu
+# #SBATCH --mail-user=username@email.com
 # #SBATCH --mail-type=END
 # #SBATCH --exclusive  # Allocate all resources on the node
 
@@ -21,11 +21,6 @@ export PYTHONUNBUFFERED=TRUE
 source ~/.bash_profile
 conda activate DeepCubeAI_env
 cd /project/dir/
-# export TMPDIR=~/.tmp/
-# export TMP=~/.tmp/
-# export TEMP=~/.tmp/
-# export TEMPDIR=~/.tmp/
-# export PMIX_MCA_gds=hash
 #module load cuda/12.3
 source /project/dir/setup.sh
 
@@ -134,8 +129,7 @@ ENV_MODEL_NAME_DISC=iceslider_disc
 ENV_MODEL_NAME_CONT=iceslider_cont
 ENV_MODEL_DIR_DISC=saved_env_models/${ENV_MODEL_NAME_DISC}
 ENV_MODEL_DIR_CONT=saved_env_models/${ENV_MODEL_NAME_CONT}
-current_time=$(date +"%Y%m%d_%H%M%S%3N")
-HEUR_NNET_NAME="iceslider_heur_${current_time}"
+HEUR_NNET_NAME=iceslider_heur
 DATA_FILE_NAME_TRAIN_VAL=s0-1k_stp20
 DATA_FILE_NAME_MODEL_TEST=s5k-5.1k_stp1k
 DATA_FILE_NAME_MODEL_TEST_PLOT=s5k-5.1k_stp10k
@@ -305,7 +299,7 @@ CMD_DISC_VS_CONT="bash scripts/pipeline.sh --stage disc_vs_cont \
                                            --save_dir $PLOTS_SAVE_DIR \
                                            --num_steps 1000 \
                                            --num_episodes 100 \
-                                           --print_interval 1"
+                                           --print_interval 500"
 
 
 
@@ -344,9 +338,6 @@ run_pipeline "$CMD_ENCODE_OFFLINE"
 
 # train_heur
 run_pipeline "$CMD_TRAIN_HEUR"
-
-# # train_heur (Distributed Training)
-# run_pipeline "$CMD_TRAIN_HEUR_DIST"
 
 # qstar
 run_pipeline "$CMD_QSTAR"
