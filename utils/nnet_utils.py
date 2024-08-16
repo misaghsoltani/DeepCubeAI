@@ -26,12 +26,14 @@ def get_device() -> Tuple[torch.device, List[int], bool]:
         on_gpu = True
 
     # TODO: MPS is not tested yet
-    elif torch.backends.mps.is_available():
-        print("WARNING: Metal Performance Shaders (MPS) backend for GPU training acceleration is ",
-              "selected. However, this is code is not tested on MPS backend!")
-        device = torch.device("mps")
-        devices = [0]
-        on_gpu = True
+    # elif torch.backends.mps.is_available():
+    #     print("\n============\nWARNING: The Metal Performance Shaders (MPS) backend is being ",
+    #           "used for GPU training acceleration with torch.float32. However, this code has ",
+    #           "not been tested on the MPS backend!\n============\n")
+    #     torch.set_default_dtype(torch.float32)
+    #     device = torch.device("mps")
+    #     devices = [0]
+    #     on_gpu = True
 
     return device, devices, on_gpu
 
