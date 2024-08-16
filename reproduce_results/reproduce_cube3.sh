@@ -57,7 +57,7 @@ ENV=cube3
 DATA_DIR=cube3
 SEARCH_TEST_DATA=/path/to/test/data.pkl
 ENV_MODEL_NAME_DISC=cube3_disc
-ENV_MODEL_NAME_CONT=cube3_cont_with_bias
+ENV_MODEL_NAME_CONT=cube3_cont
 ENV_MODEL_DIR_DISC=saved_env_models/${ENV_MODEL_NAME_DISC}
 ENV_MODEL_DIR_CONT=saved_env_models/${ENV_MODEL_NAME_CONT}
 HEUR_NNET_NAME=cube3_heur
@@ -214,8 +214,8 @@ CMD_DISC_VS_CONT="bash scripts/pipeline.sh --stage disc_vs_cont \
                                            --num_episodes 100 \
                                            --print_interval 500"
 
-# gen_offline
-run_pipeline "$CMD_TRAIN_VAL"
+# # gen_offline
+# run_pipeline "$CMD_TRAIN_VAL"
 
 # visualize_data
 run_pipeline "$CMD_VIZ_DATA"
