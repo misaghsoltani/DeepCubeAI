@@ -1,6 +1,6 @@
 # DCAI_DIR is set to the parent directory of the folder containing this script.
 # For example, if this script is in /path/to/reproduce_results/, DCAI_DIR will be /path/to/
-DCAI_DIR=$(dirname "$(dirname "$(realpath "$0")")")
+DCAI_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) && pwd)
 DCAI_SETUP_DIR="$DCAI_DIR/setup.sh"
 source "$DCAI_SETUP_DIR"
 
