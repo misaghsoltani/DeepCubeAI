@@ -1,4 +1,7 @@
-source ../setup.sh
+# DCAI_DIR is the parent folder of the folder current file is in (/reproduce_results/).
+DCAI_DIR=$(dirname "$(dirname "$(realpath "$0")")")
+DCAI_SETUP_DIR="$DCAI_DIR/setup.sh"
+source "$DCAI_SETUP_DIR"
 
 run_pipeline() {
 
@@ -7,7 +10,7 @@ run_pipeline() {
     echo "Running command:"
     while IFS= read -r line; do
         echo "$line"
-    done <<< "$(echo "$CMD" | sed 's/ --/\n--/g')"
+    done <<<"$(echo "$CMD" | sed 's/ --/\n--/g')"
     echo ""
 
     echo "------------------------------------------------------------------------"
@@ -49,7 +52,6 @@ run_pipeline() {
     echo ""
 }
 
-
 ENV=iceslider
 DATA_DIR=iceslider
 ENV_MODEL_NAME_DISC=iceslider_disc
@@ -72,7 +74,6 @@ RESULTS_DIR_UCS="model=${ENV_MODEL_NAME_DISC}_UCS_results/batchsize=${UCS_BATCH_
 RESULTS_DIR_GBFS="model=${ENV_MODEL_NAME_DISC}__heur=${HEUR_NNET_NAME}_GBFS_results/${current_time}"
 PER_EQ_TOL=100
 PLOTS_SAVE_DIR=$(pwd)
-
 
 CMD_TRAIN_VAL="bash scripts/pipeline.sh --stage gen_offline \
                                         --env $ENV \
@@ -228,8 +229,6 @@ CMD_DISC_VS_CONT="bash scripts/pipeline.sh --stage disc_vs_cont \
                                            --num_steps 1000 \
                                            --num_episodes 100 \
                                            --print_interval 1"
-
-
 
 # gen_offline
 run_pipeline "$CMD_TRAIN_VAL"
