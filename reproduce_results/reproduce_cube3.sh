@@ -74,7 +74,9 @@ RESULTS_DIR_QSTAR="model=${ENV_MODEL_NAME_DISC}__heur=${HEUR_NNET_NAME}__QSTAR_r
 RESULTS_DIR_UCS="model=${ENV_MODEL_NAME_DISC}__UCS_results/batchsize=${UCS_BATCH_SIZE}_${current_time}"
 RESULTS_DIR_GBFS="model=${ENV_MODEL_NAME_DISC}__heur=${HEUR_NNET_NAME}__GBFS_results/${current_time}"
 PER_EQ_TOL=100
-PLOTS_SAVE_DIR=$(pwd)
+PLOTS_SAVE_DIR=$DCAI_DIR
+# Get the number of CPU cores available on the system, works on Linux, macOS, and Windows (using Git Bash or Windows Subsystem for Linux)
+NUM_CORES=$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || wmic cpu get NumberOfCores 2>/dev/null)
 
 CMD_TRAIN_VAL="bash scripts/pipeline.sh --stage gen_offline \
                                         --env $ENV \
@@ -83,7 +85,7 @@ CMD_TRAIN_VAL="bash scripts/pipeline.sh --stage gen_offline \
                                         --num_offline_steps 30 \
                                         --num_train_eps 9000 \
                                         --num_val_eps 1000 \
-                                        --num_cpus $SLURM_CPUS_ON_NODE \
+                                        --num_cpus $NUM_CORES \
                                         --start_level 0 \
                                         --num_levels 9000"
 
@@ -93,7 +95,7 @@ CMD_ENV_MODEL_TEST="bash scripts/pipeline.sh --stage gen_env_test \
                                              --data_file_name $DATA_FILE_NAME_MODEL_TEST \
                                              --num_offline_steps 1000 \
                                              --num_test_eps 100 \
-                                             --num_cpus $SLURM_CPUS_ON_NODE \
+                                             --num_cpus $NUM_CORES \
                                              --start_level 9000 \
                                              --num_levels 100"
 
@@ -102,7 +104,7 @@ CMD_SEARCH_TEST="bash scripts/pipeline.sh --stage gen_search_test \
                                           --data_dir $DATA_DIR \
                                           --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
                                           --num_test_eps 100 \
-                                          --num_cpus $SLURM_CPUS_ON_NODE \
+                                          --num_cpus $NUM_CORES \
                                           --start_level 10000"
 
 CMD_TRAIN_ENV_DISC="bash scripts/pipeline.sh --stage train_model \
@@ -197,7 +199,7 @@ CMD_ENV_MODEL_TEST_PLOT="bash scripts/pipeline.sh --stage gen_env_test \
                                                   --data_file_name $DATA_FILE_NAME_MODEL_TEST_PLOT \
                                                   --num_offline_steps 10_000 \
                                                   --num_test_eps 100 \
-                                                  --num_cpus $SLURM_CPUS_ON_NODE \
+                                                  --num_cpus $NUM_CORES \
                                                   --start_level 9000 \
                                                   --num_levels 100"
 
