@@ -1,4 +1,6 @@
-# DCAI_DIR is the parent folder of the folder current file is in (/reproduce_results/).
+# DCAI_DIR is set to the parent directory of the folder containing this script.
+# For example, if this script is in /path/to/reproduce_results/, DCAI_DIR will be /path/to/
+DCAI_DIR=$(dirname "$(dirname "$(realpath "$0")")")
 DCAI_DIR=$(dirname "$(dirname "$(realpath "$0")")")
 DCAI_SETUP_DIR="$DCAI_DIR/setup.sh"
 source "$DCAI_SETUP_DIR"
