@@ -59,7 +59,6 @@ ENV_MODEL_NAME_DISC=digitjump_disc
 ENV_MODEL_NAME_CONT=digitjump_cont
 ENV_MODEL_DIR_DISC=saved_env_models/${ENV_MODEL_NAME_DISC}
 ENV_MODEL_DIR_CONT=saved_env_models/${ENV_MODEL_NAME_CONT}
-current_time=$(date +"%Y%m%d_%H%M%S%3N")
 HEUR_NNET_NAME=digitjump_heur
 DATA_FILE_NAME_TRAIN_VAL=s0-1k_stp20
 DATA_FILE_NAME_MODEL_TEST=s5k-5.1k_stp1k
@@ -69,7 +68,7 @@ QSTAR_WEIGHT=0.7
 QSTAR_H_WEIGHT=1.0
 QSTAR_BATCH_SIZE=1
 UCS_BATCH_SIZE=50
-current_time=$(date +"%Y%m%d_%H%M%S%3N")
+current_time=$(date +"%Y%m%d_%H%M%S")$(($(date +%N)/1000000))
 RESULTS_DIR_QSTAR="model=${ENV_MODEL_NAME_DISC}__heur=${HEUR_NNET_NAME}_QSTAR_results/path_cost_weight=${QSTAR_WEIGHT}__h_weight=${QSTAR_H_WEIGHT}__batchsize=${QSTAR_BATCH_SIZE}_${current_time}"
 RESULTS_DIR_UCS="model=${ENV_MODEL_NAME_DISC}_UCS_results/batchsize=${UCS_BATCH_SIZE}_${current_time}"
 RESULTS_DIR_GBFS="model=${ENV_MODEL_NAME_DISC}__heur=${HEUR_NNET_NAME}_GBFS_results/${current_time}"
