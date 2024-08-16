@@ -19,13 +19,13 @@ run_pipeline() {
     echo "------------------------------------------------------------------------"
 
     # Capture start time
-    START_TIME=$(date +%s%3N)
+    START_TIME=$(($(date +%s)*1000 + $(date +%N)/1000000))
 
     # Run the pipeline script
     $CMD
 
     # Capture end time
-    END_TIME=$(date +%s%3N)
+    END_TIME=$(($(date +%s)*1000 + $(date +%N)/1000000))
 
     # Calculate execution time in milliseconds
     ELAPSED_TIME=$((END_TIME - START_TIME))
@@ -42,6 +42,10 @@ run_pipeline() {
 
     SECONDS=$((ELAPSED_TIME / 1000))
     MILLISECONDS=$((ELAPSED_TIME % 1000))
+
+# Output the results (if needed)
+echo "Time taken: ${DAYS}d ${HOURS}h ${MINUTES}m ${SECONDS}s ${MILLISECONDS}ms"
+
 
     # Display elapsed time in the desired format
     echo "------------------------------------------------------------------------"

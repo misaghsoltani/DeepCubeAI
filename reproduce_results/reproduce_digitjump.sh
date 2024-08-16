@@ -19,13 +19,13 @@ run_pipeline() {
     echo "------------------------------------------------------------------------"
 
     # Capture start time
-    START_TIME=$(date +%s%3N)
+    START_TIME=$(($(date +%s)*1000 + $(date +%N)/1000000))
 
     # Run the pipeline script
     $CMD
 
     # Capture end time
-    END_TIME=$(date +%s%3N)
+    END_TIME=$(($(date +%s)*1000 + $(date +%N)/1000000))
 
     # Calculate execution time in milliseconds
     ELAPSED_TIME=$((END_TIME - START_TIME))
