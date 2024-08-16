@@ -1,42 +1,79 @@
+import importlib.util
+import inspect
+import os
+from typing import Type, Union
+
 from environments.environment_abstract import Environment
 
 
-def get_environment(env_name: str) -> Environment:
-    """Get the environment instance based on the environment name.
+def find_env_class_by_name(env_name: str) -> Union[Type[Environment], None]:
+    """Finds and returns the environment class by its name.
 
     Args:
-        env_name (str): The name of the environment.
+        env_name (str): The name of the environment to find.
 
     Returns:
-        Environment: An instance of the requested environment.
+        Union[Type[Environment], None]: The environment class if found, otherwise None.
+    """
+    env_name_lower = env_name.lower()
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    root_directory = os.path.abspath(os.path.join(script_dir, '..'))
+    environments_dir = os.path.join(root_directory, 'environments')
+
+    for filename in os.listdir(environments_dir):
+        if filename.endswith(".py"):
+            module_name = filename[:-3]
+            file_path = os.path.join(environments_dir, filename)
+
+            try:
+                spec = importlib.util.spec_from_file_location(module_name, file_path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+
+                for name, obj in inspect.getmembers(module, inspect.isclass):
+                    if hasattr(obj, 'get_env_name'):
+                        method = getattr(obj, 'get_env_name')
+                        if callable(method) and not is_abstract_method(obj, 'get_env_name'):
+                            env_class_name = obj().get_env_name().lower()
+                            if env_class_name == env_name_lower:
+                                return obj  # Return the class if the environment name matches
+            except Exception:
+                continue  # Skip to the next file in case of an error
+
+    return None  # Return None if no matching environment is found
+
+
+def is_abstract_method(cls: Type, method_name: str) -> bool:
+    """Checks if a method is abstract in a given class.
+
+    Args:
+        cls (Type): The class to check.
+        method_name (str): The name of the method to check.
+
+    Returns:
+        bool: True if the method is abstract, False otherwise.
+    """
+    return bool(
+        getattr(cls, '__abstractmethods__', None) and method_name in cls.__abstractmethods__)
+
+
+def get_environment(env_name: str) -> Environment:
+    """Gets an instance of the environment by its name.
+
+    Args:
+        env_name (str): The name of the environment to get.
+
+    Returns:
+        Environment: An instance of the environment.
 
     Raises:
-        ValueError: If the environment name is not recognized.
+        ValueError: If no known environment is found with the given name.
     """
     env_name = env_name.lower()
-    env: Environment
+    env_class = find_env_class_by_name(env_name)
 
-    if env_name == "cube3":
-        from environments.cube3 import Cube3
-        env = Cube3()
-
-    elif env_name == "sokoban":
-        from environments.sokoban import Sokoban
-        env = Sokoban(10, 4)
-
-    elif env_name == "cube3_triples":
-        from environments.cube3 import Cube3
-        env = Cube3(do_action_triples=True)
-
-    elif env_name == "iceslider":
-        from environments.ice_slider import IceSliderEnvironment
-        env = IceSliderEnvironment()
-
-    elif env_name == "digitjump":
-        from environments.digit_jump import DigitJumpEnvironment
-        env = DigitJumpEnvironment()
-
+    if env_class:
+        return env_class()
     else:
         raise ValueError(f"No known environment {env_name}")
-
-    return env

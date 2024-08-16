@@ -10,9 +10,8 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
 
+from environments.environment_abstract import Environment, State
 from utils.pytorch_models import Conv2dModel, FullyConnectedModel, ResnetModel, STEThresh
-
-from .environment_abstract import Environment, State
 
 
 class SokobanDQN(nn.Module):
@@ -346,13 +345,13 @@ def _get_surfaces() -> List[np.ndarray]:
 
 class Sokoban(Environment):
 
-    def __init__(self, dim: int, num_boxes: int):
+    def __init__(self, dim: int = 10, num_boxes: int = 4):
         """
         Initializes the Sokoban environment.
 
         Args:
-            dim (int): Dimension of the environment.
-            num_boxes (int): Number of boxes in the environment.
+            dim (int): Dimension of the environment. Default is 10.
+            num_boxes (int): Number of boxes in the environment. Default is 3.
         """
         super().__init__()
 
@@ -373,6 +372,14 @@ class Sokoban(Environment):
         self.enc_hw: Tuple[int, int] = (enc_h, enc_w)
 
         self._surfaces = _get_surfaces()
+
+    def get_env_name(self) -> str:
+        """Gets the name of the environment.
+
+        Returns:
+            str: The name of the environment, "sokoban".
+        """
+        return "sokoban"
 
     @property
     def num_actions_max(self) -> int:

@@ -48,6 +48,14 @@ class Environment(ABC):
         self.dtype = float
         self.fixed_actions: bool = True
 
+    @abstractmethod
+    def get_env_name(self) -> str:
+        """Gets the name of the environment.
+
+        Returns:
+            str: The name of the environment.
+        """
+
     @property
     @abstractmethod
     def num_actions_max(self):

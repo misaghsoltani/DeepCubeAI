@@ -8,10 +8,9 @@ import torch.nn.functional as F
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from torch import Tensor, nn
 
+from environments.environment_abstract import Environment, State
 from utils.pytorch_models import FullyConnectedModel, ResnetModel, STEThresh
 from visualizers.cube3_viz_simple import InteractiveCube
-
-from .environment_abstract import Environment, State
 
 
 class Cube3FCResnet(nn.Module):
@@ -300,7 +299,7 @@ class Cube3(Environment):
     moves: List[str] = [f"{f}{n}" for f in ["U", "D", "L", "R", "B", "F"] for n in [-1, 1]]
     moves_rev: List[str] = [f"{f}{n}" for f in ["U", "D", "L", "R", "B", "F"] for n in [1, -1]]
 
-    def __init__(self, do_action_triples: bool = False):
+    def __init__(self):
         """
         Initializes the Cube3 environment.
 
@@ -311,17 +310,8 @@ class Cube3(Environment):
         self.dtype = np.uint8
         self.cube_len = 3
 
-        self.do_action_triples: bool = do_action_triples
-
-        if self.do_action_triples:
-            self.num_moves = 12**3
-            self.action_triples: List[Tuple] = []
-            for i in range(12):
-                for j in range(12):
-                    for k in range(12):
-                        self.action_triples.append((i, j, k))
-        else:
-            self.num_moves = 12
+        self.do_action_triples: bool = False
+        self.num_moves = 12
 
         # solved state
         self.goal_colors: np.ndarray = np.arange(0, (self.cube_len**2) * 6, 1, dtype=self.dtype)
@@ -335,6 +325,14 @@ class Cube3(Environment):
 
         self.rotate_idxs_new, self.rotate_idxs_old = self._compute_rotation_idxs(
             self.cube_len, self.moves)
+
+    def get_env_name(self) -> str:
+        """Gets the name of the environment.
+
+        Returns:
+            str: The name of the environment, "cube3".
+        """
+        return "cube3"
 
     @property
     def num_actions_max(self) -> int:
@@ -749,3 +747,48 @@ class Cube3(Environment):
             # pylint: disable=consider-using-enumerate
 
         return rotate_idxs_new, rotate_idxs_old
+
+
+class Cube3Triples(Cube3):
+    """Cube3Triples environment class."""
+
+    moves: List[str] = [f"{f}{n}" for f in ["U", "D", "L", "R", "B", "F"] for n in [-1, 1]]
+    moves_rev: List[str] = [f"{f}{n}" for f in ["U", "D", "L", "R", "B", "F"] for n in [1, -1]]
+
+    def __init__(self):
+        """
+        Initializes the Cube3Triples environment.
+        """
+        super().__init__()
+        self.dtype = np.uint8
+        self.cube_len = 3
+
+        self.do_action_triples: bool = True
+
+        self.num_moves = 12**3
+        self.action_triples: List[Tuple] = []
+        for i in range(12):
+            for j in range(12):
+                for k in range(12):
+                    self.action_triples.append((i, j, k))
+
+        # solved state
+        self.goal_colors: np.ndarray = np.arange(0, (self.cube_len**2) * 6, 1, dtype=self.dtype)
+
+        # get idxs changed for moves
+        self.rotate_idxs_new: Dict[str, np.ndarray]
+        self.rotate_idxs_old: Dict[str, np.ndarray]
+
+        self.adj_faces: Dict[int, np.ndarray]
+        self._get_adj()
+
+        self.rotate_idxs_new, self.rotate_idxs_old = self._compute_rotation_idxs(
+            self.cube_len, self.moves)
+
+    def get_env_name(self) -> str:
+        """Gets the name of the environment.
+
+        Returns:
+            str: The name of the environment, "cube3_triples".
+        """
+        return "cube3_triples"

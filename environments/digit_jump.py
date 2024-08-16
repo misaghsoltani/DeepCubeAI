@@ -6,10 +6,9 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
 
+from environments.environment_abstract import Environment, State
 from environments.puzzlegen.dice_puzzle import DicePuzzle
 from utils.pytorch_models import Conv2dModel, FullyConnectedModel, ResnetConv2dModel, STEThresh
-
-from .environment_abstract import Environment, State
 
 
 class DigitJumpDQN(nn.Module):
@@ -559,6 +558,14 @@ class DigitJumpEnvironment(Environment):
         enc_h: int = 8
         enc_w: int = 8
         self.enc_hw: Tuple[int, int] = (enc_h, enc_w)
+
+    def get_env_name(self) -> str:
+        """Gets the name of the environment.
+
+        Returns:
+            str: The name of the environment, "digitjump".
+        """
+        return "digitjump"
 
     @property
     def num_actions_max(self):
