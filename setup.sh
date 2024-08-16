@@ -1,4 +1,4 @@
-DCAI_DIR=$(dirname "$(realpath "$0")")
+DCAI_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) && pwd)
 
 # Check if $DCAI_DIR is already at the beginning of PYTHONPATH
 if [[ "$PYTHONPATH" != "$DCAI_DIR"* ]]; then
