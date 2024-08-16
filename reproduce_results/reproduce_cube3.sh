@@ -214,8 +214,8 @@ CMD_DISC_VS_CONT="bash scripts/pipeline.sh --stage disc_vs_cont \
                                            --num_episodes 100 \
                                            --print_interval 500"
 
-# # gen_offline
-# run_pipeline "$CMD_TRAIN_VAL"
+# gen_offline
+run_pipeline "$CMD_TRAIN_VAL"
 
 # visualize_data
 run_pipeline "$CMD_VIZ_DATA"
