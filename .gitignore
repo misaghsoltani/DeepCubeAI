@@ -1,9 +1,9 @@
-/.vscode
-/data
-/saved_env_models
-/saved_heur_models
+.vscode
+data/
+saved_env_models/
+saved_heur_models/
 .DS_Store
-/job_run_outputs
+job_run_outputs/
 *.pyc
-/results
+results/
 __pycache__
