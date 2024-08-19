@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --job-name=iceslider_dist_heur
 #SBATCH -N 10
-#SBATCH -D /project/dir/
+#SBATCH -D /project/dir/deepcubeai/
 #SBATCH --gres=gpu:2
 #SBATCH --ntasks-per-node=2
 #SBATCH --cpus-per-task=14
@@ -113,7 +113,6 @@ run_pipeline() {
     SECONDS=$((ELAPSED_TIME / 1000))
     MILLISECONDS=$((ELAPSED_TIME % 1000))
 
-    # Display elapsed time in the desired format
     echo "------------------------------------------------------------------------"
     echo "------------------------------------------------------------------------"
     echo "Elapsed Time for this stage (D:H:M:S:MS): $DAYS:$HOURS:$MINUTES:$SECONDS:$MILLISECONDS"
@@ -132,19 +131,19 @@ DATA_FILE_NAME_TRAIN_VAL=s0-1k_stp20
 PER_EQ_TOL=100
 
 
-CMD_TRAIN_HEUR_DIST="bash scripts/pipeline.sh --stage train_heur \
-                                              --env $ENV \
-                                              --data_dir $DATA_DIR \
-                                              --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                              --env_model_name $ENV_MODEL_NAME_DISC \
-                                              --heur_nnet_name $HEUR_NNET_NAME \
-                                              --per_eq_tol $PER_EQ_TOL \
-                                              --heur_batch_size 10_000 \
-                                              --states_per_update 50_000_000 \
-                                              --start_steps 20 \
-                                              --goal_steps 20 \
-                                              --max_solve_steps 20 \
-                                              --use_dist"
+CMD_TRAIN_HEUR_DIST="bash deepcubeai/scripts/pipeline.sh --stage train_heur \
+                                                         --env $ENV \
+                                                         --data_dir $DATA_DIR \
+                                                         --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
+                                                         --env_model_name $ENV_MODEL_NAME_DISC \
+                                                         --heur_nnet_name $HEUR_NNET_NAME \
+                                                         --per_eq_tol $PER_EQ_TOL \
+                                                         --heur_batch_size 10_000 \
+                                                         --states_per_update 50_000_000 \
+                                                         --start_steps 20 \
+                                                         --goal_steps 20 \
+                                                         --max_solve_steps 20 \
+                                                         --use_dist"
 
 
 # train_heur

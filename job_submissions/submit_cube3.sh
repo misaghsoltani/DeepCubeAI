@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --job-name=cube3
 #SBATCH -N 1
-#SBATCH -D /project/dir/
+#SBATCH -D /project/dir/deepcubeai/
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=28
@@ -112,7 +112,6 @@ run_pipeline() {
     SECONDS=$((ELAPSED_TIME / 1000))
     MILLISECONDS=$((ELAPSED_TIME % 1000))
 
-    # Display elapsed time in the desired format
     echo "------------------------------------------------------------------------"
     echo "------------------------------------------------------------------------"
     echo "Elapsed Time for this stage (D:H:M:S:MS): $DAYS:$HOURS:$MINUTES:$SECONDS:$MILLISECONDS"
@@ -127,8 +126,8 @@ ENV=cube3
 DATA_DIR=cube3
 ENV_MODEL_NAME_DISC=cube3_disc
 ENV_MODEL_NAME_CONT=cube3_cont
-ENV_MODEL_DIR_DISC=saved_env_models/${ENV_MODEL_NAME_DISC}
-ENV_MODEL_DIR_CONT=saved_env_models/${ENV_MODEL_NAME_CONT}
+ENV_MODEL_DIR_DISC=deepcubeai/saved_env_models/${ENV_MODEL_NAME_DISC}
+ENV_MODEL_DIR_CONT=deepcubeai/saved_env_models/${ENV_MODEL_NAME_CONT}
 HEUR_NNET_NAME=cube3_heur
 DATA_FILE_NAME_TRAIN_VAL=10k_stp30
 DATA_FILE_NAME_MODEL_TEST=0.1k_stp1k
@@ -143,178 +142,178 @@ RESULTS_DIR_QSTAR="model=${ENV_MODEL_NAME_DISC}__heur=${HEUR_NNET_NAME}__QSTAR_r
 RESULTS_DIR_UCS="model=${ENV_MODEL_NAME_DISC}__UCS_results/batchsize=${UCS_BATCH_SIZE}_${current_time}"
 RESULTS_DIR_GBFS="model=${ENV_MODEL_NAME_DISC}__heur=${HEUR_NNET_NAME}__GBFS_results/${current_time}"
 PER_EQ_TOL=100
-PLOTS_SAVE_DIR=$(pwd)
+PLOTS_SAVE_DIR="${DCAI_DIR}/deepcubeai/"
 
 
 
-CMD_TRAIN_VAL="bash scripts/pipeline.sh --stage gen_offline \
-                                        --env $ENV \
-                                        --data_dir $DATA_DIR \
-                                        --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                        --num_offline_steps 30 \
-                                        --num_train_eps 9000 \
-                                        --num_val_eps 1000 \
-                                        --num_cpus $SLURM_CPUS_ON_NODE \
-                                        --start_level 0 \
-                                        --num_levels 9000"
+CMD_TRAIN_VAL="bash deepcubeai/scripts/pipeline.sh --stage gen_offline \
+                                                   --env $ENV \
+                                                   --data_dir $DATA_DIR \
+                                                   --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
+                                                   --num_offline_steps 30 \
+                                                   --num_train_eps 9000 \
+                                                   --num_val_eps 1000 \
+                                                   --num_cpus $SLURM_CPUS_ON_NODE \
+                                                   --start_level 0 \
+                                                   --num_levels 9000"
 
-CMD_ENV_MODEL_TEST="bash scripts/pipeline.sh --stage gen_env_test \
+CMD_ENV_MODEL_TEST="bash deepcubeai/scripts/pipeline.sh --stage gen_env_test \
+                                                        --env $ENV \
+                                                        --data_dir $DATA_DIR \
+                                                        --data_file_name $DATA_FILE_NAME_MODEL_TEST \
+                                                        --num_offline_steps 1000 \
+                                                        --num_test_eps 100 \
+                                                        --num_cpus $SLURM_CPUS_ON_NODE \
+                                                        --start_level 9000 \
+                                                        --num_levels 100"
+
+CMD_SEARCH_TEST="bash deepcubeai/scripts/pipeline.sh --stage gen_search_test \
+                                                     --env $ENV \
+                                                     --data_dir $DATA_DIR \
+                                                     --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
+                                                     --num_test_eps 100 \
+                                                     --num_cpus $SLURM_CPUS_ON_NODE \
+                                                     --start_level 10_000"
+
+CMD_TRAIN_ENV_DISC="bash deepcubeai/scripts/pipeline.sh --stage train_model \
+                                                        --env $ENV \
+                                                        --data_dir $DATA_DIR \
+                                                        --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
+                                                        --env_batch_size 100 \
+                                                        --env_model_name $ENV_MODEL_NAME_DISC"
+
+CMD_TEST_ENV_DISC="bash deepcubeai/scripts/pipeline.sh --stage test_model \
+                                                       --env $ENV \
+                                                       --data_dir $DATA_DIR \
+                                                       --data_file_name $DATA_FILE_NAME_MODEL_TEST \
+                                                       --env_model_name $ENV_MODEL_NAME_DISC \
+                                                       --print_interval 100"
+
+CMD_TRAIN_ENV_CONT="bash deepcubeai/scripts/pipeline.sh --stage train_model_cont \
+                                                        --env $ENV \
+                                                        --data_dir $DATA_DIR \
+                                                        --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
+                                                        --env_batch_size 100 \
+                                                        --env_model_name $ENV_MODEL_NAME_CONT"
+
+CMD_TEST_ENV_CONT="bash deepcubeai/scripts/pipeline.sh --stage test_model_cont \
+                                                       --env $ENV \
+                                                       --data_dir $DATA_DIR \
+                                                       --data_file_name $DATA_FILE_NAME_MODEL_TEST \
+                                                       --env_model_name $ENV_MODEL_NAME_CONT \
+                                                       --print_interval 100"
+
+CMD_ENCODE_OFFLINE="bash deepcubeai/scripts/pipeline.sh --stage encode_offline \
+                                                        --env $ENV \
+                                                        --data_dir $DATA_DIR \
+                                                        --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
+                                                        --env_model_name $ENV_MODEL_NAME_DISC"
+
+CMD_TRAIN_HEUR="bash deepcubeai/scripts/pipeline.sh --stage train_heur \
+                                                    --env $ENV \
+                                                    --data_dir $DATA_DIR \
+                                                    --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
+                                                    --env_model_name $ENV_MODEL_NAME_DISC \
+                                                    --heur_nnet_name $HEUR_NNET_NAME \
+                                                    --per_eq_tol $PER_EQ_TOL \
+                                                    --heur_batch_size 10_000 \
+                                                    --states_per_update 50_000_000 \
+                                                    --start_steps 30 \
+                                                    --goal_steps 30 \
+                                                    --max_solve_steps 30"
+
+# CMD_QSTAR="bash deepcubeai/scripts/pipeline.sh --stage qstar \
+#                                                --env $ENV \
+#                                                --data_dir $DATA_DIR \
+#                                                --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
+#                                                --env_model_name $ENV_MODEL_NAME_DISC \
+#                                                --heur_nnet_name $HEUR_NNET_NAME \
+#                                                --qstar_batch_size $QSTAR_BATCH_SIZE \
+#                                                --qstar_weight $QSTAR_WEIGHT \
+#                                                --qstar_h_weight $QSTAR_H_WEIGHT \
+#                                                --per_eq_tol $PER_EQ_TOL \
+#                                                --qstar_results_dir $RESULTS_DIR_QSTAR \
+#                                                --save_imgs true"
+
+# CMD_UCS="bash deepcubeai/scripts/pipeline.sh --stage ucs \
+#                                              --env $ENV \
+#                                              --data_dir $DATA_DIR \
+#                                              --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
+#                                              --env_model_name $ENV_MODEL_NAME_DISC \
+#                                              --ucs_batch_size $UCS_BATCH_SIZE \
+#                                              --per_eq_tol $PER_EQ_TOL \
+#                                              --ucs_results_dir $RESULTS_DIR_UCS \
+#                                              --save_imgs true"
+
+# CMD_GBFS="bash deepcubeai/scripts/pipeline.sh --stage gbfs \
+#                                               --env $ENV \
+#                                               --data_dir $DATA_DIR \
+#                                               --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
+#                                               --env_model_name $ENV_MODEL_NAME_DISC \
+#                                               --heur_nnet_name $HEUR_NNET_NAME \
+#                                               --per_eq_tol $PER_EQ_TOL \
+#                                               --gbfs_results_dir $RESULTS_DIR_GBFS \
+#                                               --search_itrs 100"
+
+CMD_QSTAR="bash deepcubeai/scripts/pipeline.sh --stage qstar \
+                                               --env $ENV \
+                                               --env_model_name $ENV_MODEL_NAME_DISC \
+                                               --heur_nnet_name $HEUR_NNET_NAME \
+                                               --qstar_batch_size $QSTAR_BATCH_SIZE \
+                                               --qstar_weight $QSTAR_WEIGHT \
+                                               --qstar_h_weight $QSTAR_H_WEIGHT \
+                                               --per_eq_tol $PER_EQ_TOL \
+                                               --qstar_results_dir $RESULTS_DIR_QSTAR \
+                                               --search_test_data /project/dir/deepcubeai/data/cube3/search_test/data.pkl \
+                                               --save_imgs true"
+
+CMD_UCS="bash deepcubeai/scripts/pipeline.sh --stage ucs \
                                              --env $ENV \
-                                             --data_dir $DATA_DIR \
-                                             --data_file_name $DATA_FILE_NAME_MODEL_TEST \
-                                             --num_offline_steps 1000 \
-                                             --num_test_eps 100 \
-                                             --num_cpus $SLURM_CPUS_ON_NODE \
-                                             --start_level 9000 \
-                                             --num_levels 100"
+                                             --env_model_name $ENV_MODEL_NAME_DISC \
+                                             --ucs_batch_size $UCS_BATCH_SIZE \
+                                             --per_eq_tol $PER_EQ_TOL \
+                                             --ucs_results_dir $RESULTS_DIR_UCS \
+                                             --search_test_data /project/dir/deepcubeai/data/cube3/search_test/data.pkl \
+                                             --save_imgs true"
 
-CMD_SEARCH_TEST="bash scripts/pipeline.sh --stage gen_search_test \
-                                          --env $ENV \
-                                          --data_dir $DATA_DIR \
-                                          --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
-                                          --num_test_eps 100 \
-                                          --num_cpus $SLURM_CPUS_ON_NODE \
-                                          --start_level 10_000"
+CMD_GBFS="bash deepcubeai/scripts/pipeline.sh --stage gbfs \
+                                              --env $ENV \
+                                              --env_model_name $ENV_MODEL_NAME_DISC \
+                                              --heur_nnet_name $HEUR_NNET_NAME \
+                                              --per_eq_tol $PER_EQ_TOL \
+                                              --gbfs_results_dir $RESULTS_DIR_GBFS \
+                                              --search_test_data /project/dir/deepcubeai/data/cube3/search_test/data.pkl \
+                                              --search_itrs 100"
 
-CMD_TRAIN_ENV_DISC="bash scripts/pipeline.sh --stage train_model \
-                                             --env $ENV \
-                                             --data_dir $DATA_DIR \
-                                             --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                             --env_batch_size 100 \
-                                             --env_model_name $ENV_MODEL_NAME_DISC"
-
-CMD_TEST_ENV_DISC="bash scripts/pipeline.sh --stage test_model \
-                                            --env $ENV \
-                                            --data_dir $DATA_DIR \
-                                            --data_file_name $DATA_FILE_NAME_MODEL_TEST \
-                                            --env_model_name $ENV_MODEL_NAME_DISC \
-                                            --print_interval 100"
-
-CMD_TRAIN_ENV_CONT="bash scripts/pipeline.sh --stage train_model_cont \
-                                             --env $ENV \
-                                             --data_dir $DATA_DIR \
-                                             --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                             --env_batch_size 100 \
-                                             --env_model_name $ENV_MODEL_NAME_CONT"
-
-CMD_TEST_ENV_CONT="bash scripts/pipeline.sh --stage test_model_cont \
-                                             --env $ENV \
-                                             --data_dir $DATA_DIR \
-                                             --data_file_name $DATA_FILE_NAME_MODEL_TEST \
-                                             --env_model_name $ENV_MODEL_NAME_CONT \
-                                             --print_interval 100"
-
-CMD_ENCODE_OFFLINE="bash scripts/pipeline.sh --stage encode_offline \
-                                             --env $ENV \
-                                             --data_dir $DATA_DIR \
-                                             --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                             --env_model_name $ENV_MODEL_NAME_DISC"
-
-CMD_TRAIN_HEUR="bash scripts/pipeline.sh --stage train_heur \
-                                         --env $ENV \
-                                         --data_dir $DATA_DIR \
-                                         --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                         --env_model_name $ENV_MODEL_NAME_DISC \
-                                         --heur_nnet_name $HEUR_NNET_NAME \
-                                         --per_eq_tol $PER_EQ_TOL \
-                                         --heur_batch_size 10_000 \
-                                         --states_per_update 50_000_000 \
-                                         --start_steps 30 \
-                                         --goal_steps 30 \
-                                         --max_solve_steps 30"
-
-# CMD_QSTAR="bash scripts/pipeline.sh --stage qstar \
-#                                     --env $ENV \
-#                                     --data_dir $DATA_DIR \
-#                                     --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
-#                                     --env_model_name $ENV_MODEL_NAME_DISC \
-#                                     --heur_nnet_name $HEUR_NNET_NAME \
-#                                     --qstar_batch_size $QSTAR_BATCH_SIZE \
-#                                     --qstar_weight $QSTAR_WEIGHT \
-#                                     --qstar_h_weight $QSTAR_H_WEIGHT \
-#                                     --per_eq_tol $PER_EQ_TOL \
-#                                     --qstar_results_dir $RESULTS_DIR_QSTAR \
-#                                     --save_imgs true"
-
-# CMD_UCS="bash scripts/pipeline.sh --stage ucs \
-#                                   --env $ENV \
-#                                   --data_dir $DATA_DIR \
-#                                   --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
-#                                   --env_model_name $ENV_MODEL_NAME_DISC \
-#                                   --ucs_batch_size $UCS_BATCH_SIZE \
-#                                   --per_eq_tol $PER_EQ_TOL \
-#                                   --ucs_results_dir $RESULTS_DIR_UCS \
-#                                   --save_imgs true"
-
-# CMD_GBFS="bash scripts/pipeline.sh --stage gbfs \
-#                                    --env $ENV \
-#                                    --data_dir $DATA_DIR \
-#                                    --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
-#                                    --env_model_name $ENV_MODEL_NAME_DISC \
-#                                    --heur_nnet_name $HEUR_NNET_NAME \
-#                                    --per_eq_tol $PER_EQ_TOL \
-#                                    --gbfs_results_dir $RESULTS_DIR_GBFS \
-#                                    --search_itrs 100"
-
-CMD_QSTAR="bash scripts/pipeline.sh --stage qstar \
-                                    --env $ENV \
-                                    --env_model_name $ENV_MODEL_NAME_DISC \
-                                    --heur_nnet_name $HEUR_NNET_NAME \
-                                    --qstar_batch_size $QSTAR_BATCH_SIZE \
-                                    --qstar_weight $QSTAR_WEIGHT \
-                                    --qstar_h_weight $QSTAR_H_WEIGHT \
-                                    --per_eq_tol $PER_EQ_TOL \
-                                    --qstar_results_dir $RESULTS_DIR_QSTAR \
-                                    --search_test_data /project/dir/data/cube3/search_test/data.pkl \
-                                    --save_imgs true"
-
-CMD_UCS="bash scripts/pipeline.sh --stage ucs \
-                                  --env $ENV \
-                                  --env_model_name $ENV_MODEL_NAME_DISC \
-                                  --ucs_batch_size $UCS_BATCH_SIZE \
-                                  --per_eq_tol $PER_EQ_TOL \
-                                  --ucs_results_dir $RESULTS_DIR_UCS \
-                                  --search_test_data /project/dir/data/cube3/search_test/data.pkl \
-                                  --save_imgs true"
-
-CMD_GBFS="bash scripts/pipeline.sh --stage gbfs \
-                                   --env $ENV \
-                                   --env_model_name $ENV_MODEL_NAME_DISC \
-                                   --heur_nnet_name $HEUR_NNET_NAME \
-                                   --per_eq_tol $PER_EQ_TOL \
-                                   --gbfs_results_dir $RESULTS_DIR_GBFS \
-                                   --search_test_data /project/dir/data/cube3/search_test/data.pkl \
-                                   --search_itrs 100"
-
-CMD_VIZ_DATA="bash scripts/pipeline.sh --stage visualize_data \
-                                       --env $ENV \
-                                       --data_dir $DATA_DIR \
-                                       --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                       --num_train_trajs_viz 8 \
-                                       --num_train_steps_viz 2 \
-                                       --num_val_trajs_viz 8 \
-                                       --num_val_steps_viz 2"
-
-CMD_ENV_MODEL_TEST_PLOT="bash scripts/pipeline.sh --stage gen_env_test \
+CMD_VIZ_DATA="bash deepcubeai/scripts/pipeline.sh --stage visualize_data \
                                                   --env $ENV \
                                                   --data_dir $DATA_DIR \
-                                                  --data_file_name $DATA_FILE_NAME_MODEL_TEST_PLOT \
-                                                  --num_offline_steps 10_000 \
-                                                  --num_test_eps 100 \
-                                                  --num_cpus $SLURM_CPUS_ON_NODE \
-                                                  --start_level 9000 \
-                                                  --num_levels 100"
+                                                  --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
+                                                  --num_train_trajs_viz 8 \
+                                                  --num_train_steps_viz 2 \
+                                                  --num_val_trajs_viz 8 \
+                                                  --num_val_steps_viz 2"
 
-CMD_DISC_VS_CONT="bash scripts/pipeline.sh --stage disc_vs_cont \
-                                           --env $ENV \
-                                           --data_dir $DATA_DIR \
-                                           --data_file_name $DATA_FILE_NAME_MODEL_TEST_PLOT \
-                                           --env_model_dir_disc $ENV_MODEL_DIR_DISC \
-                                           --env_model_dir_cont $ENV_MODEL_DIR_CONT \
-                                           --save_dir $PLOTS_SAVE_DIR \
-                                           --num_steps 10_000 \
-                                           --num_episodes 100 \
-                                           --print_interval 500"
+CMD_ENV_MODEL_TEST_PLOT="bash deepcubeai/scripts/pipeline.sh --stage gen_env_test \
+                                                             --env $ENV \
+                                                             --data_dir $DATA_DIR \
+                                                             --data_file_name $DATA_FILE_NAME_MODEL_TEST_PLOT \
+                                                             --num_offline_steps 10_000 \
+                                                             --num_test_eps 100 \
+                                                             --num_cpus $SLURM_CPUS_ON_NODE \
+                                                             --start_level 9000 \
+                                                             --num_levels 100"
+
+CMD_DISC_VS_CONT="bash deepcubeai/scripts/pipeline.sh --stage disc_vs_cont \
+                                                      --env $ENV \
+                                                      --data_dir $DATA_DIR \
+                                                      --data_file_name $DATA_FILE_NAME_MODEL_TEST_PLOT \
+                                                      --env_model_dir_disc $ENV_MODEL_DIR_DISC \
+                                                      --env_model_dir_cont $ENV_MODEL_DIR_CONT \
+                                                      --save_dir $PLOTS_SAVE_DIR \
+                                                      --num_steps 10_000 \
+                                                      --num_episodes 100 \
+                                                      --print_interval 500"
 
 
 
