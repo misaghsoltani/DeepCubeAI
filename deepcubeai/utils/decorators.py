@@ -1,4 +1,7 @@
-from typing import Any, Callable
+from inspect import Parameter, signature
+from typing import Any, Callable, Type, TypeVar
+
+T = TypeVar('T', bound=Type[Any])
 
 
 def optional_abstract_method(method: Callable[..., Any]) -> Callable[..., Any]:
@@ -35,3 +38,46 @@ def optional_abstract_method(method: Callable[..., Any]) -> Callable[..., Any]:
         return method(instance, *args, **kwargs)
 
     return wrapper
+
+
+def enforce_init_defaults(cls: T) -> T:
+    """Class decorator to enforce default values for all __init__ parameters.
+
+    Ensures that all parameters in the `__init__` method of the subclass inheriting from the
+        current class have default values.
+
+    Args:
+        cls (Type[T]): The class to be decorated.
+
+    Returns:
+        Type[T]: The decorated class with the `__init_subclass__` method overridden.
+
+    Raises:
+        TypeError: If any parameter in the `__init__` method does not have a default value.
+    """
+
+    original_init_subclass = cls.__init_subclass__
+
+    @classmethod
+    def new_init_subclass(cls: Type[Any], **kwargs: Any) -> None:
+        """Override for `__init_subclass__` to enforce default values for `__init__` parameters.
+
+        Args:
+            **kwargs (Any): Additional keyword arguments for the subclass initialization.
+
+        Raises:
+            TypeError: If any parameter in the `__init__` method does not have a default value.
+        """
+        original_init_subclass(**kwargs)
+        init_signature = signature(cls.__init__)
+
+        for param in init_signature.parameters.values():
+            if param.name == 'self':
+                continue
+            if param.default is Parameter.empty:
+                raise TypeError(
+                    f"All parameters in the '__init__' method of '{cls.__name__}' must have "
+                    f"default values, but parameter '{param.name}' does not.")
+
+    cls.__init_subclass__ = new_init_subclass
+    return cls

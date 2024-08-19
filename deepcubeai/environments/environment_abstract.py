@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 from torch import nn
 
-from deepcubeai.utils.decorators import optional_abstract_method
+from deepcubeai.utils.decorators import enforce_init_defaults, optional_abstract_method
 
 
 class State(ABC):
@@ -30,6 +30,7 @@ class State(ABC):
         """
 
 
+@enforce_init_defaults
 class Environment(ABC):
 
     def __init__(self):
