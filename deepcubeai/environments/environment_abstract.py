@@ -5,19 +5,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 from torch import nn
 
-
-class OptionalAbstractMethod:
-
-    def __init__(self, method):
-        self.method = method
-
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self
-        # Check if the method is implemented in the subclass
-        if self.method.__name__ not in instance.__class__.__dict__:
-            raise AttributeError(f"{self.method.__name__} is not implemented in {owner.__name__}")
-        return self.method.__get__(instance, owner)
+from deepcubeai.utils.decorators import optional_abstract_method
 
 
 class State(ABC):
@@ -25,7 +13,7 @@ class State(ABC):
     def __init__(self):
         self.seed = None
 
-    @OptionalAbstractMethod
+    @optional_abstract_method
     def get_opt_path_len(self) -> int:
         """Get the length of the optimal path.
 
@@ -33,7 +21,7 @@ class State(ABC):
             int: The length of the optimal path.
         """
 
-    @OptionalAbstractMethod
+    @optional_abstract_method
     def get_solution(self) -> List[int]:
         """Get the list of actions to be taken to get to the goal.
 
@@ -156,7 +144,7 @@ class Environment(ABC):
                               level_seeds: Optional[List[int]] = None) -> List[State]:
         pass
 
-    @OptionalAbstractMethod
+    @optional_abstract_method
     def get_goals(self, states: List[State], num_steps: Optional[int]) -> List[State]:
         """Get the goal states for the input list of states.
 
