@@ -1,5 +1,5 @@
 .vscode
-data/
+# data/
 saved_env_models/
 saved_heur_models/
 .DS_Store
