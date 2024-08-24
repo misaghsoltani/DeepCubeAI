@@ -131,19 +131,19 @@ DATA_FILE_NAME_TRAIN_VAL=s0-1k_stp20
 PER_EQ_TOL=100
 
 
-CMD_TRAIN_HEUR_DIST="bash deepcubeai/scripts/pipeline.sh --stage train_heur \
-                                                         --env $ENV \
-                                                         --data_dir $DATA_DIR \
-                                                         --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                                         --env_model_name $ENV_MODEL_NAME_DISC \
-                                                         --heur_nnet_name $HEUR_NNET_NAME \
-                                                         --per_eq_tol $PER_EQ_TOL \
-                                                         --heur_batch_size 10_000 \
-                                                         --states_per_update 50_000_000 \
-                                                         --start_steps 30 \
-                                                         --goal_steps 30 \
-                                                         --max_solve_steps 30 \
-                                                         --use_dist"
+CMD_TRAIN_HEUR_DIST="bash deepcubeai.sh --stage train_heur \
+                                        --env $ENV \
+                                        --data_dir $DATA_DIR \
+                                        --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
+                                        --env_model_name $ENV_MODEL_NAME_DISC \
+                                        --heur_nnet_name $HEUR_NNET_NAME \
+                                        --per_eq_tol $PER_EQ_TOL \
+                                        --heur_batch_size 10_000 \
+                                        --states_per_update 50_000_000 \
+                                        --start_steps 30 \
+                                        --goal_steps 30 \
+                                        --max_solve_steps 30 \
+                                        --use_dist"
 
 
 # train_heur
