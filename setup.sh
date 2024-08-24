@@ -8,5 +8,3 @@ if [[ "$PYTHONPATH" != "$DCAI_DIR:"* ]]; then
     # Add $DCAI_DIR to the beginning of PYTHONPATH
     export PYTHONPATH="$DCAI_DIR:$PYTHONPATH"
 fi
-
-export RL_ENV_DATA="$DCAI_DIR/deepcubeai/data/sokoban_env_data/"

@@ -1,5 +1,6 @@
 import os
 import pickle
+import zipfile
 from typing import Any, List, Tuple
 
 import cv2
@@ -331,21 +332,62 @@ def _get_surfaces() -> List[np.ndarray]:
     Returns:
         List[np.ndarray]: List of surface images.
     """
-    img_dir = os.environ["RL_ENV_DATA"] + "/sokoban/"
+    img_dir = "deepcubeai/environments/sokoban_data/surface"
 
     # Load images, representing the corresponding situation
-    box = imageio.imread(f"{img_dir}/surface/box.png")
-    # box_on_target = imageio.imread(f"{img_dir}/surface/box_on_target.png")
-    # box_target = imageio.imread(f"{img_dir}/surface/box_target.png")
-    floor = imageio.imread(f"{img_dir}/surface/floor.png")
-    player = imageio.imread(f"{img_dir}/surface/player.png")
-    # player_on_target = imageio.imread(f"{img_dir}/surface/player_on_target.png")
-    wall = imageio.imread(f"{img_dir}/surface/wall.png")
+    box = imageio.imread(f"{img_dir}/box.png")
+    floor = imageio.imread(f"{img_dir}/floor.png")
+    player = imageio.imread(f"{img_dir}/player.png")
+    wall = imageio.imread(f"{img_dir}/wall.png")
 
-    # surfaces = [wall, floor, box_target, player, box, player_on_target, box_on_target]
     surfaces = [wall, floor, player, box]
 
     return surfaces
+
+
+def _env_data_exists(dir: str, item_name: str) -> bool:
+    """
+    Checks if the specified item (file or folder) exists and processes a ZIP file if needed.
+
+    This function performs the following actions:
+    1. Checks if the `item_name` (file or folder) exists in the given directory (`dir`).
+    2. If the `item_name` is not a ZIP file and exists, returns True.
+    3. If a corresponding ZIP file (`item_name` with a `.zip` extension) exists,
+       extracts its contents to the given directory and returns True.
+    4. If neither the `item_name` nor the ZIP file is found, prints a message and returns False.
+
+    Args:
+        dir (str): The directory to search in.
+        item_name (str): The name of the file or folder to check for.
+
+    Returns:
+        bool: True if the item or its corresponding ZIP file exists and was processed,
+              False otherwise.
+    """
+    name, ext = os.path.splitext(item_name)
+    name_zip: str = f"{name}.zip"
+    item_path: str = os.path.join(dir, item_name)
+    zip_path: str = os.path.join(dir, name_zip)
+
+    if ext != ".zip" and os.path.exists(item_path):
+        return True
+
+    if os.path.exists(zip_path):
+        print(f"ZIP file '{name_zip}' found in '{dir}'. Extracting contents...")
+
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            extracted_files: List[str] = zip_ref.namelist()
+            if not extracted_files:
+                raise ValueError(
+                    f"The ZIP file '{name_zip}' is empty or does not contain any files.")
+
+            zip_ref.extractall(dir)
+
+        print(f"Successfully extracted all contents from '{name_zip}' to '{dir}'.")
+        return True
+
+    print(f"Neither '{item_name}' nor '{name_zip}' found in '{dir}'. One of these is required.")
+    return False
 
 
 class Sokoban(Environment):
@@ -365,8 +407,14 @@ class Sokoban(Environment):
 
         self.num_moves: int = 4
 
-        self.states_train: List[SokobanState] = load_states(os.environ["RL_ENV_DATA"] +
-                                                            "/sokoban/train.pkl")
+        goal_states_dir: str = "deepcubeai/environments/sokoban_data"
+        goal_states_filename: str = "goal_states.pkl"
+        assert _env_data_exists(goal_states_dir, goal_states_filename), (
+            f"Expected '{goal_states_filename}' or '{goal_states_filename[:-4]}.zip' to " +
+            f"exist in '{goal_states_dir}'")
+
+        self.states_train: List[SokobanState] = load_states(
+            os.path.join(goal_states_dir, goal_states_filename))
 
         self.img_dim: int = 40
         self.chan_enc: int = 16
