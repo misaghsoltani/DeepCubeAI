@@ -55,7 +55,7 @@ run_pipeline() {
 
 ENV=sokoban
 DATA_DIR=sokoban
-SEARCH_TEST_DATA=/project/dir/deepcubeai/data/sokoban/search_test/search_test_data.pkl
+SEARCH_TEST_DATA=deepcubeai/data/sokoban/search_test/search_test_data.pkl
 ENV_MODEL_NAME_DISC=sokoban_disc
 ENV_MODEL_NAME_CONT=sokoban_cont
 ENV_MODEL_DIR_DISC=deepcubeai/saved_env_models/${ENV_MODEL_NAME_DISC}
@@ -84,9 +84,7 @@ CMD_TRAIN_VAL="bash deepcubeai/scripts/pipeline.sh --stage gen_offline \
                                                    --num_offline_steps 30 \
                                                    --num_train_eps 9000 \
                                                    --num_val_eps 1000 \
-                                                   --num_cpus $NUM_CORES \
-                                                   --start_level 0 \
-                                                   --num_levels 9000"
+                                                   --num_cpus $NUM_CORES"
 
 CMD_ENV_MODEL_TEST="bash deepcubeai/scripts/pipeline.sh --stage gen_env_test \
                                                         --env $ENV \
@@ -94,9 +92,7 @@ CMD_ENV_MODEL_TEST="bash deepcubeai/scripts/pipeline.sh --stage gen_env_test \
                                                         --data_file_name $DATA_FILE_NAME_MODEL_TEST \
                                                         --num_offline_steps 1000 \
                                                         --num_test_eps 100 \
-                                                        --num_cpus $NUM_CORES \
-                                                        --start_level 9000 \
-                                                        --num_levels 100"
+                                                        --num_cpus $NUM_CORES"
 
 CMD_TRAIN_ENV_DISC="bash deepcubeai/scripts/pipeline.sh --stage train_model \
                                                         --env $ENV \
@@ -190,9 +186,7 @@ CMD_ENV_MODEL_TEST_PLOT="bash deepcubeai/scripts/pipeline.sh --stage gen_env_tes
                                                              --data_file_name $DATA_FILE_NAME_MODEL_TEST_PLOT \
                                                              --num_offline_steps 10_000 \
                                                              --num_test_eps 100 \
-                                                             --num_cpus $NUM_CORES \
-                                                             --start_level 9000 \
-                                                             --num_levels 100"
+                                                             --num_cpus $NUM_CORES"
 
 CMD_DISC_VS_CONT="bash deepcubeai/scripts/pipeline.sh --stage disc_vs_cont \
                                                       --env $ENV \

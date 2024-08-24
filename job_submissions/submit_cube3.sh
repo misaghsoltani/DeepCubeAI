@@ -132,8 +132,8 @@ HEUR_NNET_NAME=cube3_heur
 DATA_FILE_NAME_TRAIN_VAL=10k_stp30
 DATA_FILE_NAME_MODEL_TEST=0.1k_stp1k
 DATA_FILE_NAME_MODEL_TEST_PLOT=0.1k_stp10k
-SEARCH_TEST_DATA=/project/dir/deepcubeai/data/cube3/search_test/search_test_data.pkl
-SEARCH_TEST_DATA_REVERSE=/project/dir/deepcubeai/data/cube3/search_test/search_test_data_reverse.pkl
+SEARCH_TEST_DATA=deepcubeai/data/cube3/search_test/search_test_data.pkl
+SEARCH_TEST_DATA_REVERSE=deepcubeai/data/cube3/search_test/search_test_data_reverse.pkl
 QSTAR_WEIGHT=0.6
 QSTAR_H_WEIGHT=1.0
 QSTAR_BATCH_SIZE=10_000
@@ -154,9 +154,7 @@ CMD_TRAIN_VAL="bash deepcubeai/scripts/pipeline.sh --stage gen_offline \
                                                    --num_offline_steps 30 \
                                                    --num_train_eps 9000 \
                                                    --num_val_eps 1000 \
-                                                   --num_cpus $SLURM_CPUS_ON_NODE \
-                                                   --start_level 0 \
-                                                   --num_levels 9000"
+                                                   --num_cpus $SLURM_CPUS_ON_NODE"
 
 CMD_ENV_MODEL_TEST="bash deepcubeai/scripts/pipeline.sh --stage gen_env_test \
                                                         --env $ENV \
@@ -164,9 +162,7 @@ CMD_ENV_MODEL_TEST="bash deepcubeai/scripts/pipeline.sh --stage gen_env_test \
                                                         --data_file_name $DATA_FILE_NAME_MODEL_TEST \
                                                         --num_offline_steps 1000 \
                                                         --num_test_eps 100 \
-                                                        --num_cpus $SLURM_CPUS_ON_NODE \
-                                                        --start_level 9000 \
-                                                        --num_levels 100"
+                                                        --num_cpus $SLURM_CPUS_ON_NODE"
 
 CMD_TRAIN_ENV_DISC="bash deepcubeai/scripts/pipeline.sh --stage train_model \
                                                         --env $ENV \
@@ -281,9 +277,7 @@ CMD_ENV_MODEL_TEST_PLOT="bash deepcubeai/scripts/pipeline.sh --stage gen_env_tes
                                                              --data_file_name $DATA_FILE_NAME_MODEL_TEST_PLOT \
                                                              --num_offline_steps 10_000 \
                                                              --num_test_eps 100 \
-                                                             --num_cpus $SLURM_CPUS_ON_NODE \
-                                                             --start_level 9000 \
-                                                             --num_levels 100"
+                                                             --num_cpus $SLURM_CPUS_ON_NODE"
 
 CMD_DISC_VS_CONT="bash deepcubeai/scripts/pipeline.sh --stage disc_vs_cont \
                                                       --env $ENV \
