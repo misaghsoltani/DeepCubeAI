@@ -55,7 +55,7 @@ run_pipeline() {
 
 ENV=sokoban
 DATA_DIR=sokoban
-SEARCH_TEST_DATA=/path/to/test/data.pkl
+SEARCH_TEST_DATA=/project/dir/deepcubeai/data/sokoban/search_test/search_test_data.pkl
 ENV_MODEL_NAME_DISC=sokoban_disc
 ENV_MODEL_NAME_CONT=sokoban_cont
 ENV_MODEL_DIR_DISC=deepcubeai/saved_env_models/${ENV_MODEL_NAME_DISC}
@@ -64,7 +64,6 @@ HEUR_NNET_NAME=sokoban_heur
 DATA_FILE_NAME_TRAIN_VAL=10k_stp30
 DATA_FILE_NAME_MODEL_TEST=0.1k_stp1k
 DATA_FILE_NAME_MODEL_TEST_PLOT=0.1k_stp10k
-DATA_FILE_NAME_SEARCH_TEST=0.1k
 QSTAR_WEIGHT=0.8
 QSTAR_H_WEIGHT=1.0
 QSTAR_BATCH_SIZE=100
@@ -98,14 +97,6 @@ CMD_ENV_MODEL_TEST="bash deepcubeai/scripts/pipeline.sh --stage gen_env_test \
                                                         --num_cpus $NUM_CORES \
                                                         --start_level 9000 \
                                                         --num_levels 100"
-
-CMD_SEARCH_TEST="bash deepcubeai/scripts/pipeline.sh --stage gen_search_test \
-                                                     --env $ENV \
-                                                     --data_dir $DATA_DIR \
-                                                     --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
-                                                     --num_test_eps 100 \
-                                                     --num_cpus $NUM_CORES \
-                                                     --start_level 10000"
 
 CMD_TRAIN_ENV_DISC="bash deepcubeai/scripts/pipeline.sh --stage train_model \
                                                         --env $ENV \
@@ -225,9 +216,6 @@ run_pipeline "$CMD_ENV_MODEL_TEST"
 
 # gen_offline_test (10K steps for plotting)
 run_pipeline "$CMD_ENV_MODEL_TEST_PLOT"
-
-# # gen_search_test
-# run_pipeline "$CMD_SEARCH_TEST"
 
 # train_model
 run_pipeline "$CMD_TRAIN_ENV_DISC"

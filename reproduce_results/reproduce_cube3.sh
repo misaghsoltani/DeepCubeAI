@@ -55,7 +55,8 @@ run_pipeline() {
 
 ENV=cube3
 DATA_DIR=cube3
-SEARCH_TEST_DATA=/path/to/test/data.pkl
+SEARCH_TEST_DATA=/project/dir/deepcubeai/data/cube3/search_test/search_test_data.pkl
+SEARCH_TEST_DATA_REVERSE=/project/dir/deepcubeai/data/cube3/search_test/search_test_data_reverse.pkl
 ENV_MODEL_NAME_DISC=cube3_disc
 ENV_MODEL_NAME_CONT=cube3_cont
 ENV_MODEL_DIR_DISC=deepcubeai/saved_env_models/${ENV_MODEL_NAME_DISC}
@@ -64,7 +65,6 @@ HEUR_NNET_NAME=cube3_heur
 DATA_FILE_NAME_TRAIN_VAL=10k_stp30
 DATA_FILE_NAME_MODEL_TEST=0.1k_stp1k
 DATA_FILE_NAME_MODEL_TEST_PLOT=0.1k_stp10k
-DATA_FILE_NAME_SEARCH_TEST=0.1k
 QSTAR_WEIGHT=0.6
 QSTAR_H_WEIGHT=1.0
 QSTAR_BATCH_SIZE=10000
@@ -98,14 +98,6 @@ CMD_ENV_MODEL_TEST="bash deepcubeai/scripts/pipeline.sh --stage gen_env_test \
                                                         --num_cpus $NUM_CORES \
                                                         --start_level 9000 \
                                                         --num_levels 100"
-
-CMD_SEARCH_TEST="bash deepcubeai/scripts/pipeline.sh --stage gen_search_test \
-                                                     --env $ENV \
-                                                     --data_dir $DATA_DIR \
-                                                     --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
-                                                     --num_test_eps 100 \
-                                                     --num_cpus $NUM_CORES \
-                                                     --start_level 10000"
 
 CMD_TRAIN_ENV_DISC="bash deepcubeai/scripts/pipeline.sh --stage train_model \
                                                         --env $ENV \
@@ -184,6 +176,27 @@ CMD_GBFS="bash deepcubeai/scripts/pipeline.sh --stage gbfs \
                                               --search_test_data $SEARCH_TEST_DATA \
                                               --search_itrs 100"
 
+CMD_QSTAR_REVERSE_DATA="bash deepcubeai/scripts/pipeline.sh --stage qstar \
+                                                            --env $ENV \
+                                                            --env_model_name $ENV_MODEL_NAME_DISC \
+                                                            --heur_nnet_name $HEUR_NNET_NAME \
+                                                            --qstar_batch_size $QSTAR_BATCH_SIZE \
+                                                            --qstar_weight $QSTAR_WEIGHT \
+                                                            --qstar_h_weight $QSTAR_H_WEIGHT \
+                                                            --per_eq_tol $PER_EQ_TOL \
+                                                            --qstar_results_dir $RESULTS_DIR_QSTAR \
+                                                            --search_test_data $SEARCH_TEST_DATA_REVERSE \
+                                                            --save_imgs true"
+
+CMD_GBFS_REVERSE_DATA="bash deepcubeai/scripts/pipeline.sh --stage gbfs \
+                                                           --env $ENV \
+                                                           --env_model_name $ENV_MODEL_NAME_DISC \
+                                                           --heur_nnet_name $HEUR_NNET_NAME \
+                                                           --per_eq_tol $PER_EQ_TOL \
+                                                           --gbfs_results_dir $RESULTS_DIR_GBFS \
+                                                           --search_test_data $SEARCH_TEST_DATA_REVERSE \
+                                                           --search_itrs 100"
+
 CMD_VIZ_DATA="bash deepcubeai/scripts/pipeline.sh --stage visualize_data \
                                                   --env $ENV \
                                                   --data_dir $DATA_DIR \
@@ -226,9 +239,6 @@ run_pipeline "$CMD_ENV_MODEL_TEST"
 # gen_offline_test (10K steps for plotting)
 run_pipeline "$CMD_ENV_MODEL_TEST_PLOT"
 
-# # gen_search_test
-# run_pipeline "$CMD_SEARCH_TEST"
-
 # train_model
 run_pipeline "$CMD_TRAIN_ENV_DISC"
 
@@ -258,3 +268,9 @@ run_pipeline "$CMD_QSTAR"
 
 # gbfs
 run_pipeline "$CMD_GBFS"
+
+# qstar (reverse data)
+run_pipeline "$CMD_QSTAR_REVERSE_DATA"
+
+# gbfs (reverse data)
+run_pipeline "$CMD_GBFS_REVERSE_DATA"

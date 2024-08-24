@@ -132,7 +132,7 @@ HEUR_NNET_NAME=sokoban_heur
 DATA_FILE_NAME_TRAIN_VAL=10k_stp30
 DATA_FILE_NAME_MODEL_TEST=0.1k_stp1k
 DATA_FILE_NAME_MODEL_TEST_PLOT=0.1k_stp10k
-DATA_FILE_NAME_SEARCH_TEST=0.1k
+SEARCH_TEST_DATA=/project/dir/deepcubeai/data/sokoban/search_test/search_test_data.pkl
 QSTAR_WEIGHT=0.8
 QSTAR_H_WEIGHT=1.0
 QSTAR_BATCH_SIZE=100
@@ -166,14 +166,6 @@ CMD_ENV_MODEL_TEST="bash deepcubeai/scripts/pipeline.sh --stage gen_env_test \
                                                         --num_cpus $SLURM_CPUS_ON_NODE \
                                                         --start_level 9000 \
                                                         --num_levels 100"
-
-CMD_SEARCH_TEST="bash deepcubeai/scripts/pipeline.sh --stage gen_search_test \
-                                                     --env $ENV \
-                                                     --data_dir $DATA_DIR \
-                                                     --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
-                                                     --num_test_eps 100 \
-                                                     --num_cpus $SLURM_CPUS_ON_NODE \
-                                                     --start_level 10000"
 
 CMD_TRAIN_ENV_DISC="bash deepcubeai/scripts/pipeline.sh --stage train_model \
                                                         --env $ENV \
@@ -222,39 +214,6 @@ CMD_TRAIN_HEUR="bash deepcubeai/scripts/pipeline.sh --stage train_heur \
                                                     --goal_steps 30 \
                                                     --max_solve_steps 30"
 
-# CMD_QSTAR="bash deepcubeai/scripts/pipeline.sh --stage qstar \
-#                                                --env $ENV \
-#                                                --data_dir $DATA_DIR \
-#                                                --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
-#                                                --env_model_name $ENV_MODEL_NAME_DISC \
-#                                                --heur_nnet_name $HEUR_NNET_NAME \
-#                                                --qstar_batch_size $QSTAR_BATCH_SIZE \
-#                                                --qstar_weight $QSTAR_WEIGHT \
-#                                                --qstar_h_weight $QSTAR_H_WEIGHT \
-#                                                --per_eq_tol $PER_EQ_TOL \
-#                                                --qstar_results_dir $RESULTS_DIR_QSTAR \
-#                                                --save_imgs true"
-
-# CMD_UCS="bash deepcubeai/scripts/pipeline.sh --stage ucs \
-#                                              --env $ENV \
-#                                              --data_dir $DATA_DIR \
-#                                              --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
-#                                              --env_model_name $ENV_MODEL_NAME_DISC \
-#                                              --ucs_batch_size $UCS_BATCH_SIZE \
-#                                              --per_eq_tol $PER_EQ_TOL \
-#                                              --ucs_results_dir $RESULTS_DIR_UCS \
-#                                              --save_imgs true"
-
-# CMD_GBFS="bash deepcubeai/scripts/pipeline.sh --stage gbfs \
-#                                               --env $ENV \
-#                                               --data_dir $DATA_DIR \
-#                                               --data_file_name $DATA_FILE_NAME_SEARCH_TEST \
-#                                               --env_model_name $ENV_MODEL_NAME_DISC \
-#                                               --heur_nnet_name $HEUR_NNET_NAME \
-#                                               --per_eq_tol $PER_EQ_TOL \
-#                                               --gbfs_results_dir $RESULTS_DIR_GBFS \
-#                                               --search_itrs 100"
-
 CMD_QSTAR="bash deepcubeai/scripts/pipeline.sh --stage qstar \
                                                --env $ENV \
                                                --env_model_name $ENV_MODEL_NAME_DISC \
@@ -264,7 +223,7 @@ CMD_QSTAR="bash deepcubeai/scripts/pipeline.sh --stage qstar \
                                                --qstar_h_weight $QSTAR_H_WEIGHT \
                                                --per_eq_tol $PER_EQ_TOL \
                                                --qstar_results_dir $RESULTS_DIR_QSTAR \
-                                               --search_test_data "/project/dir/deepcubeai/data/sokoban/search_test/data.pkl" \
+                                               --search_test_data $SEARCH_TEST_DATA \
                                                --save_imgs true"
 
 CMD_UCS="bash deepcubeai/scripts/pipeline.sh --stage ucs \
@@ -273,7 +232,7 @@ CMD_UCS="bash deepcubeai/scripts/pipeline.sh --stage ucs \
                                              --ucs_batch_size $UCS_BATCH_SIZE \
                                              --per_eq_tol $PER_EQ_TOL \
                                              --ucs_results_dir $RESULTS_DIR_UCS \
-                                             --search_test_data /project/dir/deepcubeai/data/sokoban/search_test/data.pkl \
+                                             --search_test_data $SEARCH_TEST_DATA \
                                              --save_imgs true"
 
 CMD_GBFS="bash deepcubeai/scripts/pipeline.sh --stage gbfs \
@@ -282,7 +241,7 @@ CMD_GBFS="bash deepcubeai/scripts/pipeline.sh --stage gbfs \
                                               --heur_nnet_name $HEUR_NNET_NAME \
                                               --per_eq_tol $PER_EQ_TOL \
                                               --gbfs_results_dir $RESULTS_DIR_GBFS \
-                                              --search_test_data /project/dir/deepcubeai/data/sokoban/search_test/data.pkl \
+                                              --search_test_data $SEARCH_TEST_DATA \
                                               --search_itrs 100"
 
 CMD_VIZ_DATA="bash deepcubeai/scripts/pipeline.sh --stage visualize_data \
@@ -328,9 +287,6 @@ run_pipeline "$CMD_ENV_MODEL_TEST"
 
 # gen_offline_test (10K steps for plotting)
 run_pipeline "$CMD_ENV_MODEL_TEST_PLOT"
-
-# # gen_search_test
-# run_pipeline "$CMD_SEARCH_TEST"
 
 # train_model
 run_pipeline "$CMD_TRAIN_ENV_DISC"
