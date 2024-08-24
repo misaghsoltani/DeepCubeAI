@@ -7,3 +7,4 @@ job_run_outputs/
 *.pyc
 results/
 __pycache__
+goal_states.pkl
