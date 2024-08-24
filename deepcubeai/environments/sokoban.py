@@ -373,7 +373,7 @@ def _env_data_exists(dir: str, item_name: str) -> bool:
         return True
 
     if os.path.exists(zip_path):
-        print(f"ZIP file '{name_zip}' found in '{dir}'. Extracting contents...")
+        print(f"ZIP file '{name_zip}' found in '{dir}'.\nExtracting contents...")
 
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             extracted_files: List[str] = zip_ref.namelist()
