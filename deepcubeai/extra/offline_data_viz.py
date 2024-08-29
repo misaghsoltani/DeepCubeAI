@@ -230,7 +230,7 @@ def main() -> None:
     plot_images(unique_val_states, args_dict["val_imgs_save_dir"], val_actions_np,
                 unique_val_episodes_idxs, unique_val_steps_idxs, args_dict["env"])
 
-    print("\nAll of the sample images are saved to file.")
+    print(f"\nSample images from the data have been saved to:\n\t{args_dict['save_imgs']}")
 
 
 if __name__ == "__main__":
