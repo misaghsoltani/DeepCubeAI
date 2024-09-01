@@ -4,40 +4,53 @@ from typing import Any, Callable, Type, TypeVar
 T = TypeVar('T', bound=Type[Any])
 
 
-def optional_abstract_method(method: Callable[..., Any]) -> Callable[..., Any]:
-    """Decorator that ensures an abstract method is implemented in a subclass before calling it.
+class OptionalAbstractMethod:
+    """
+    A descriptor class that ensures an abstract method is implemented in a subclass before calling it.
 
-    Args:
-        method (Callable[..., Any]): The method to be checked for implementation.
-
-    Returns:
-        Callable[..., Any]: The wrapped method that raises an AttributeError if not implemented
-            but is called, or the result of the method call if implemented.
-
-    Raises:
-        AttributeError: If the method is not implemented in the subclass, but it's called.
+    Attributes:
+        method (Callable[..., Any]): The abstract method to be checked.
     """
 
-    def wrapper(instance: Any, *args: Any, **kwargs: Any) -> Any:
-        """Checks if the method is implemented in the subclass.
+    def __init__(self, method: Callable[..., Any]) -> None:
+        """
+        Initializes the OptionalAbstractMethod descriptor.
 
         Args:
-            instance (Any): The instance of the class.
-            *args (Any): Positional arguments passed to the method.
-            **kwargs (Any): Keyword arguments passed to the method.
+            method (Callable[..., Any]): The abstract method to be checked.
+        """
+        self.method = method
+
+    def __get__(self, instance: T, owner: Type[T]) -> Any:
+        """
+        Gets the method implementation from the instance or raises an AttributeError if not implemented.
+
+        Args:
+            instance (T): The instance of the class.
+            owner (Type[T]): The class that owns the method.
 
         Returns:
-            Any: The result of the method call if implemented.
-
-        Raises:
-            AttributeError: If the method is not implemented in the subclass.
+            Any: The method implementation if found, otherwise raises an AttributeError.
         """
-        if method.__name__ not in instance.__class__.__dict__:
-            raise AttributeError(
-                f"{method.__name__} is not implemented in {instance.__class__.__name__}")
-        return method(instance, *args, **kwargs)
+        if instance is None:
+            return self
+        # Check if the method is implemented in the subclass
+        if self.method.__name__ not in instance.__class__.__dict__:
+            raise AttributeError(f"{self.method.__name__} is not implemented in {owner.__name__}")
+        return self.method.__get__(instance, owner)
 
-    return wrapper
+
+def optional_abstract_method(func: Callable[..., Any]) -> OptionalAbstractMethod:
+    """
+    Decorator that ensures an abstract method is implemented in a subclass before calling it.
+
+    Args:
+        func (Callable[..., Any]): The abstract method to be checked.
+
+    Returns:
+        OptionalAbstractMethod: The descriptor instance that wraps the abstract method.
+    """
+    return OptionalAbstractMethod(func)
 
 
 def enforce_init_defaults(cls: T) -> T:

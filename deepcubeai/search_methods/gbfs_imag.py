@@ -373,6 +373,9 @@ def update_results(results: Dict[str, Any], state: State, is_solved: bool, num_s
     if hasattr(state, "get_opt_path_len"):
         results["len_optimal_path"].append(state.get_opt_path_len())
         results["is_optimal_path"].append(num_steps <= state.get_opt_path_len())
+    else:
+        results["len_optimal_path"] = None
+        results["is_optimal_path"] = None
 
 
 def save_results(results: Dict[str, Any], results_file: str) -> None:
@@ -394,13 +397,16 @@ def print_summary(results: Dict[str, Any]) -> None:
     Args:
         results (Dict[str, Any]): Results dictionary.
     """
-    opt_avg = _get_mean(results, "is_optimal_path") if "is_optimal_path" in results else 0
+    opt_avg = _get_mean(results, "is_optimal_path") if (
+        "is_optimal_path" in results and results["is_optimal_path"] is not None) else None
+    optimal = f"{100.0 * opt_avg:.2f}%" if opt_avg is not None else 'N/A'
 
     print(f"Summary:\n"
-          f"States Total: {len(results['states'])}, Solved Total: {np.sum(results['solved'])}\n"
+          f"States Total: {len(results['states'])}, "
+          f"Solved Total: {np.sum(results['solved'])}\n"
           f"Means - SolnCost: {_get_mean(results, 'num_steps'):.2f}, "
           f"Solved: {100.0 * np.mean(results['solved']):.2f}%, "
-          f"Optimal: {100.0 * opt_avg:.2f}%, "
+          f"Optimal: {optimal}, "
           f"Time: {_get_mean(results, 'times'):.2f}")
 
 

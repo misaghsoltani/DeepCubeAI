@@ -627,73 +627,6 @@ def parse_arguments(parser: ArgumentParser, args_list: List[str] = None) -> Dict
     return args_dict
 
 
-def main(args_list: List[str] = None) -> None:
-    """Main function to execute the search algorithm.
-
-    Args:
-        args_list (List[str], optional): List of arguments. Defaults to None.
-    """
-    # arguments
-    parser: ArgumentParser = ArgumentParser()
-    args_dict: Dict[str, Any] = parse_arguments(parser, args_list)
-
-    if not os.path.exists(args_dict["results_dir"]):
-        os.makedirs(args_dict["results_dir"])
-
-    results_file: str = f"{args_dict['results_dir']}/results.pkl"
-    output_file: str = f"{args_dict['results_dir']}/output.txt"
-    if not args_dict["debug"]:
-        sys.stdout = data_utils.Logger(output_file, "w")
-
-    print_args(args_dict)
-
-    save_imgs_dir: str = None
-    if args_dict["save_imgs"]:
-        save_imgs_dir = ("ucs_soln_images" if args_dict["h_weight"] == 0 else
-                         "qstar_soln_images" if args_dict["weight"] != 0 else "bfs_soln_images")
-        save_imgs_dir = os.path.join(args_dict["results_dir"], save_imgs_dir)
-        if not os.path.exists(save_imgs_dir):
-            os.makedirs(save_imgs_dir)
-
-    # environment
-    env: Environment = env_utils.get_environment(args_dict["env"])
-
-    # get data
-    input_data = pickle.load(open(args_dict["states"], "rb"))
-    states: List[State] = input_data["states"]
-    state_goals: List[State] = input_data["state_goals"]
-
-    # initialize results
-    if os.path.isfile(results_file):
-        with open(results_file, "rb") as file:
-            results: Dict[str, Any] = pickle.load(file)
-        start_idx: int = len(results["solutions"])
-        print("Results file exists")
-
-    else:
-        results: Dict[str, Any] = dict()
-        results["states"] = []
-        results["solutions"] = []
-        results["paths"] = []
-        results["times"] = []
-        results["num_nodes_generated"] = []
-        results["solved"] = []
-        results["num_itrs"] = []
-        results["path_cost"] = []
-        results["len_optimal_path"] = []
-        results["is_optimal_path"] = []
-        results["num_moves"] = []
-        start_idx: int = 0
-
-    if args_dict["start_idx"] is not None:
-        start_idx: int = args_dict["start_idx"]
-
-    print(f"Starting at idx {start_idx}")
-
-    bwqs_python(args_dict, start_idx, env, states, state_goals, results, results_file,
-                args_dict["save_imgs"], save_imgs_dir)
-
-
 def bwqs_python(args_dict: Dict[str, Any], start_idx: int, env: Environment, states: List[State],
                 state_goals: List[State], results: Dict[str, Any], results_file: str,
                 save_imgs: bool, save_imgs_dir: Optional[str]) -> None:
@@ -920,12 +853,18 @@ def bwqs_python(args_dict: Dict[str, Any], start_idx: int, env: Environment, sta
     states_total = len(results["solved"])
     solved_total = np.sum(results["solved"])
     solved_perc = (solved_total / states_total) * 100
-    optimal_percent = np.mean(results["is_optimal_path"]) * 100
+    optimal = 'N/A'
+    if has_get_opt_path_len:
+        optimal_percent = np.mean(results["is_optimal_path"]) * 100
+        optimal = f"{optimal_percent:.2f}%"
 
     print(f"\nSummary:\n"
-          f"Number of Solved States: {solved_total}, Total Number of States: {states_total}, "
-          f"Success Rate: {solved_perc:.2f}%\nAvg # Moves: {avg_moves:.2f}, "
-          f"Optimal: {optimal_percent:.2f}%, Avg Itrs: {avg_itrs:.2f}, "
+          f"Number of Solved States: {solved_total}, "
+          f"Total Number of States: {states_total}, "
+          f"Success Rate: {solved_perc:.2f}%\n"
+          f"Avg # Moves: {avg_moves:.2f}, "
+          f"Optimal: {optimal}, "
+          f"Avg Itrs: {avg_itrs:.2f}, "
           f"Avg # Nodes Gen: {avg_num_nodes_generated:.2f}, "
           f"Avg Time: {avg_time:.2f}, Avg Nodes/Sec: {avg_nodes_per_sec:.2E}")
 
@@ -946,6 +885,73 @@ def _get_mean(results: Dict[str, Any], key: str) -> float:
 
     mean_val = np.mean([x for x, solved in zip(results[key], results["solved"]) if solved])
     return float(mean_val)
+
+
+def main(args_list: List[str] = None) -> None:
+    """Main function to execute the search algorithm.
+
+    Args:
+        args_list (List[str], optional): List of arguments. Defaults to None.
+    """
+    # arguments
+    parser: ArgumentParser = ArgumentParser()
+    args_dict: Dict[str, Any] = parse_arguments(parser, args_list)
+
+    if not os.path.exists(args_dict["results_dir"]):
+        os.makedirs(args_dict["results_dir"])
+
+    results_file: str = f"{args_dict['results_dir']}/results.pkl"
+    output_file: str = f"{args_dict['results_dir']}/output.txt"
+    if not args_dict["debug"]:
+        sys.stdout = data_utils.Logger(output_file, "w")
+
+    print_args(args_dict)
+
+    save_imgs_dir: str = None
+    if args_dict["save_imgs"]:
+        save_imgs_dir = ("ucs_soln_images" if args_dict["h_weight"] == 0 else
+                         "qstar_soln_images" if args_dict["weight"] != 0 else "bfs_soln_images")
+        save_imgs_dir = os.path.join(args_dict["results_dir"], save_imgs_dir)
+        if not os.path.exists(save_imgs_dir):
+            os.makedirs(save_imgs_dir)
+
+    # environment
+    env: Environment = env_utils.get_environment(args_dict["env"])
+
+    # get data
+    input_data = pickle.load(open(args_dict["states"], "rb"))
+    states: List[State] = input_data["states"]
+    state_goals: List[State] = input_data["state_goals"]
+
+    # initialize results
+    if os.path.isfile(results_file):
+        with open(results_file, "rb") as file:
+            results: Dict[str, Any] = pickle.load(file)
+        start_idx: int = len(results["solutions"])
+        print("Results file exists")
+
+    else:
+        results: Dict[str, Any] = dict()
+        results["states"] = []
+        results["solutions"] = []
+        results["paths"] = []
+        results["times"] = []
+        results["num_nodes_generated"] = []
+        results["solved"] = []
+        results["num_itrs"] = []
+        results["path_cost"] = []
+        results["len_optimal_path"] = []
+        results["is_optimal_path"] = []
+        results["num_moves"] = []
+        start_idx: int = 0
+
+    if args_dict["start_idx"] is not None:
+        start_idx: int = args_dict["start_idx"]
+
+    print(f"Starting at idx {start_idx}")
+
+    bwqs_python(args_dict, start_idx, env, states, state_goals, results, results_file,
+                args_dict["save_imgs"], save_imgs_dir)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-name: DeepCubeAI_env
+name: deepcubeai_env
 channels:
   - defaults
   - pytorch
@@ -7,6 +7,7 @@ dependencies:
   - python
   - matplotlib
   - pytorch
+  - tensorboard
   - numpy
   - openmpi
   - mpi

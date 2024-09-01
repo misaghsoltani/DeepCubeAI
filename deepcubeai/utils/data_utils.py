@@ -22,6 +22,8 @@ class Logger:
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
 
+        print(f"Logging output to: {os.path.abspath(filename)}")
+
         self.terminal = sys.stdout
         self.log = open(filename, mode, encoding="utf-8")
 
