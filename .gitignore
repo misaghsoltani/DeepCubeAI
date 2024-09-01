@@ -1,10 +1,11 @@
 .vscode
-# data/
 saved_env_models/
 saved_heur_models/
 .DS_Store
-job_run_outputs/
+._.DS_Store
 *.pyc
 results/
 __pycache__
 deepcubeai/environments/sokoban_data/goal_states.pkl
+dist/
+deepcubeai.egg-info/

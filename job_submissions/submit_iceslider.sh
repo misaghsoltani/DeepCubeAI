@@ -19,7 +19,7 @@ export PYTHONUNBUFFERED=TRUE
 # Load modules
 # module load python3/anaconda/2023.9
 source ~/.bash_profile
-conda activate DeepCubeAI_env
+conda activate deepcubeai_env
 cd /project/dir/
 #module load cuda/12.3
 source /project/dir/setup.sh

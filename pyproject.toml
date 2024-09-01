@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deepcubeai"
+dynamic = ["version"]
+description = "Learning Discrete World Models for Heuristic Search"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Misagh Soltani", email = "msoltani@email.sc.edu" }]
+license = { text = "MIT License" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+keywords = [
+    "DeepCubeAI",
+    "DeepCubeA",
+    "DeepCube",
+    "DeepXube",
+    "deep learning",
+    "reinforcement learning",
+    "deep reinforcement learning",
+    "search",
+    "heuristic search",
+    "pathfinding",
+    "planning",
+    "Rubik's Cube",
+    "Sokoban",
+    "Q*",
+    "model-based reinforcement learning",
+    "discrete world model",
+    "deep q-learning",
+    "deep q-network",
+    "Q* search",
+]
+dependencies = [
+    'torch>=2.0',
+    'numpy == 1.*',
+    'matplotlib',
+    'scikit-learn',
+    'networkx',
+    'imageio',
+    'imageio-ffmpeg',
+    'gym',
+    'opencv-python-headless',
+    'openmpi',
+    'mpi',
+    'tensorboard',
+]
+
+[project.urls]
+GitHub = "https://github.com/misaghsoltani/DeepCubeAI/"
+Paper = "https://rlj.cs.umass.edu/2024/papers/Paper225.html"
+
+
+[project.scripts]
+deepcubeai = "deepcubeai.main:main"
+
+[tool.setuptools.packages.find]
+include = ["deepcubeai*"]
+namespaces = false
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = { attr = "deepcubeai.__version__" }

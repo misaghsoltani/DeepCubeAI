@@ -9,7 +9,7 @@ Arguments being used:
 --num_episodes:		100
 --num_steps:		10000
 --print_interval:		500
---save_dir:		/work/msoltani/projects/DeepCubeAI_draft/DeepCubeConstrained_final_0.5
+--save_dir:		save/dir
 --save_pdf:		True
 --------------------------------------------
 
@@ -93,5 +93,5 @@ Q3: 1.087e-01
 IQR: 1.514e-02
 Range: 1.537e-01
 
-Plot saved to '/work/msoltani/projects/DeepCubeAI_draft/DeepCubeConstrained_final_0.5/plots/cube3_mse_100eps_10000steps_1.pdf'
-Information saved to '/work/msoltani/projects/DeepCubeAI_draft/DeepCubeConstrained_final_0.5/plots/cube3_mse_100eps_10000steps_1.txt'
+Plot saved to 'save/dir/plots/cube3_mse_100eps_10000steps_1.pdf'
+Information saved to 'save/dir/plots/cube3_mse_100eps_10000steps_1.txt'

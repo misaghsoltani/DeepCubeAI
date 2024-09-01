@@ -1,46 +1,4 @@
-# Display help message
-show_help() {
-    echo "Usage: pipeline.sh [options]"
-    echo ""
-    echo "This script executes the pipeline for DeepCubeAI based on the provided arguments."
-    echo "Ensure you have set the necessary arguments before running this pipeline."
-    echo ""
-    echo "Arguments:"
-    echo "  --stage                The stage of the pipeline to execute. Available stages are gen_offline, train_model, train_model_cont, test_model, test_model_cont,"
-    echo "                         train_heur, qstar, and visualize_data."
-    echo "  --env                  The environment for DeepCubeAI."
-    echo "  --data_dir             Directory to offline data."
-    echo "  --num_offline_steps    Number of steps to be taken for generating offline data."
-    echo "  --env_model_name       The environment model file."
-    echo "  --batch_size           Batch size."
-    echo "  --states_per_update    Number of states per update."
-    echo "  --max_solve_steps      Number of steps to take when trying to solve training states with greedy best-first search (GBFS)."
-    echo "                         Each state encountered when solving is added to the training set. Number of steps starts at 1"
-    echo "                         and is increased every update until the maximum number is reached. Increasing this number can make"
-    echo "                         the cost-to-go function more robust by exploring more of the state space."
-    echo "  --start_steps          Maximum number of steps to take from offline states to generate start states"
-    echo "  --goal_steps           Maximum number of steps to take from the start states to generate goal states"
-    echo "  --num_cpus             Number of CPUs to use."
-    echo "  --search_test_data     Test data directory."
-    echo "  --qstar_batch_size     Batch size for Q* search."
-    echo "  --qstar_weight         Weight for heuristic in Q* search."
-    echo "  --qstar_results_dir    Directory to save Q* search results."
-    echo "  --per_eq_tol           Percent of latent state elements that need to be equal to declare equal."
-    echo "  --num_train_eps        Number of episodes for training in offline data generation. Default is 9000."
-    echo "  --num_val_eps          Number of episodes for validation in offline data generation. Default is 1000."
-    echo "  --num_train_trajs_viz  Number of training trajectories to be visualized as samples. Default is 30."
-    echo "  --num_train_steps_viz  Number of training steps per trajectory to be visualized as samples. Default is 10."
-    echo "  --num_val_trajs_viz    Number of validation trajectories to be visualized as samples. Default is 30."
-    echo "  --num_val_steps_viz    Number of validation steps per trajectory to be visualized as samples. Default is 10."
-    echo "  --start_level          Starting seed of offline data. Default is None."
-    echo "  --num_levels           Number of unique seeds used for generating offline data. Default is None."
-    echo ""
-    exit 0
-}
-
-if [[ "$1" == "--help" ]]; then
-    show_help
-fi
+source deepcubeai/scripts/help.sh
 
 # Remove all environment variables that start with 'DCAI_',
 # to avoid any potential conflicts or leftovers
@@ -51,6 +9,10 @@ unset_vars
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
+    -h|--help)
+        show_help
+        exit 0
+        ;;
     --stage)
         DCAI_STAGE="$2"
         shift 2
@@ -227,6 +189,7 @@ while [[ $# -gt 0 ]]; do
         echo ""
         echo "ARG ERROR: Unknown option: $1"
         echo ""
+        show_help
         unset_vars
         exit 1
         ;;
@@ -291,7 +254,10 @@ handle_offline_data_vars() {
     # If $DCAI_DATA_DIR is not already assigned in stages other than 'qstar' and 'ucs', the value of $DCAI_ENV will be used
     if [ -z "$DCAI_DATA_DIR" ] && [ "$DCAI_STAGE" != "qstar" ] && [ "$DCAI_STAGE" != "ucs" ]; then
         DCAI_DATA_DIR="$DCAI_ENV"
-        echo "WARNING: The argument '--data_dir' was not given. By default, the environment name ($DCAI_ENV) will be used as the value to this argument."
+        echo ""
+        echo "=========== WARNING ==========="
+        echo "The argument '--data_dir' was not given. By default, the environment name ($DCAI_ENV) will be used as the value to this argument."
+        echo "==============================="
         echo ""
     fi
 
@@ -324,17 +290,12 @@ handle_offline_data_vars() {
     # Set DCAI_TRAIN_ENC_DATA_FILE_NAME to "train_data_enc" if DCAI_DATA_FILE_NAME is empty,
     # else append "_train_data_enc" unless it already contains "train_data_enc"
     DCAI_TRAIN_ENC_DATA_FILE_NAME=$([ -z "$DCAI_DATA_FILE_NAME" ] && echo "train_data_enc" || (echo "$DCAI_DATA_FILE_NAME" | grep -q "train_data_enc" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_train_data_enc"))
-    DCAI_OFFLINE_TRAIN_ENC=${DCAI_OFFLINE_DIR}/${DCAI_TRAIN_ENC_DATA_FILE_NAME}.pkl
+    DCAI_OFFLINE_TRAIN_ENC=${DCAI_OFFLINE_ENC_DIR}/${DCAI_TRAIN_ENC_DATA_FILE_NAME}.pkl
 
     # Set DCAI_VAL_ENC_DATA_FILE_NAME to "val_data_enc" if DCAI_DATA_FILE_NAME is empty,
     # else append "_val_data_enc" unless it already contains "val_data_enc"
     DCAI_VAL_ENC_DATA_FILE_NAME=$([ -z "$DCAI_DATA_FILE_NAME" ] && echo "val_data_enc" || (echo "$DCAI_DATA_FILE_NAME" | grep -q "val_data_enc" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_val_data_enc"))
-    DCAI_OFFLINE_VAL_ENC=${DCAI_OFFLINE_DIR}/${DCAI_VAL_ENC_DATA_FILE_NAME}.pkl
-
-    # Set DCAI_VAL_ENC_DATA_FILE_NAME to "val_data_enc" if DCAI_DATA_FILE_NAME is empty,
-    # else append "_val_data_enc" unless it already contains "val_data_enc"
-    DCAI_VAL_ENC_DATA_FILE_NAME=$([ -z "$DCAI_DATA_FILE_NAME" ] && echo "val_data_enc" || (echo "$DCAI_DATA_FILE_NAME" | grep -q "val_data_enc" && echo "$DCAI_DATA_FILE_NAME" || echo "${DCAI_DATA_FILE_NAME}_val_data_enc"))
-    DCAI_OFFLINE_VAL_ENC=${DCAI_OFFLINE_DIR}/${DCAI_VAL_ENC_DATA_FILE_NAME}.pkl
+    DCAI_OFFLINE_VAL_ENC=${DCAI_OFFLINE_ENC_DIR}/${DCAI_VAL_ENC_DATA_FILE_NAME}.pkl
 
     DCAI_NUM_CPUS=${DCAI_NUM_CPUS:-1}
 }
@@ -374,6 +335,7 @@ handle_env_model_vars() {
     DCAI_ENV_TRAIN_BATCH_SIZE=${DCAI_ENV_TRAIN_BATCH_SIZE:-100}
     # For continous model - Maximum number of steps to predict
     DCAI_NUM_ENV_TRAIN_STEPS=1
+    DCAI_PER_EQ_TOL="${DCAI_PER_EQ_TOL:-100}"
 }
 
 # Function to set up MPI environment and construct options
@@ -426,39 +388,56 @@ handle_heur_model_vars() {
     # Number of test states for testing DQN after training
     DCAI_NUM_TEST=${DCAI_NUM_TEST:-1000}
     [ "$DCAI_USE_DIST" = "true" ] && setup_mpi
+    DCAI_STATES_PER_UPDATE=${DCAI_STATES_PER_UPDATE:-50000000}
 }
 
 handle_qstar_vars() {
     DCAI_OFFLINE_SEARCH_TEST="${DCAI_SEARCH_TEST_DATA:-$DCAI_OFFLINE_SEARCH_TEST}"
-    if [ -z "$DCAI_SEARCH_TEST_DATA" ]; then
-        echo "WARNING: The argument '--search_test_data' was not given. By default, the following path will be used:"
+    if [ -z "$DCAI_SEARCH_TEST_DATA" ]; then        
+        echo ""
+        echo "=========== WARNING ==========="
+        echo "The argument '--search_test_data' was not given. By default, the following path will be used:"
         echo "$DCAI_OFFLINE_SEARCH_TEST"
+        echo "==============================="
+        echo ""
     fi
     DCAI_SAVE_IMGS="${DCAI_SAVE_IMGS:-False}"
     DCAI_QSTAR_H_WEIGHT="${DCAI_QSTAR_H_WEIGHT:-1}"
+    DCAI_QSTAR_WEIGHT="${DCAI_QSTAR_WEIGHT:-1}"
+    DCAI_QSTAR_BATCH_SIZE="${DCAI_QSTAR_BATCH_SIZE:-1}"
     # Set DCAI_RESULTS_DIR to DCAI_QSTAR_RESULTS_DIR if '--qstar_results_dir' is given as an arg, otherwise use the default path.
-    DCAI_RESULTS_DIR="deepcubeai/results/${DCAI_ENV}/${DCAI_QSTAR_RESULTS_DIR:-"model=${DCAI_ENV_MODEL_NAME}_heur=${DCAI_HEUR_NNET_NAME}_QSTAR_results/path_cost_weight=${DCAI_QSTAR_WEIGHT}__h_weight=${DCAI_QSTAR_H_WEIGHT}"}"
+    DCAI_RESULTS_DIR="deepcubeai/results/${DCAI_ENV}/${DCAI_QSTAR_RESULTS_DIR:-"model=${DCAI_ENV_MODEL_NAME}__heur=${DCAI_HEUR_NNET_NAME}_QStar_results/path_cost_weight=${DCAI_QSTAR_WEIGHT}"}"
 }
 
 handle_ucs_vars() {
     DCAI_OFFLINE_SEARCH_TEST="${DCAI_SEARCH_TEST_DATA:-$DCAI_OFFLINE_SEARCH_TEST}"
     if [ -z "$DCAI_SEARCH_TEST_DATA" ]; then
-        echo "WARNING: The argument '--search_test_data' was not given. By default, the following path will be used:"
+        echo ""
+        echo "=========== WARNING ==========="
+        echo "The argument '--search_test_data' was not given. By default, the following path will be used:"
         echo "$DCAI_OFFLINE_SEARCH_TEST"
+        echo "==============================="
+        echo ""
     fi
     DCAI_SAVE_IMGS="${DCAI_SAVE_IMGS:-False}"
     # Set DCAI_RESULTS_DIR to DCAI_UCS_RESULTS_DIR if '--ucs_results_dir' is given as an arg, otherwise use the default path.
     DCAI_RESULTS_DIR="deepcubeai/results/${DCAI_ENV}/${DCAI_UCS_RESULTS_DIR:-"model=${DCAI_ENV_MODEL_NAME}_UCS_results"}"
+    DCAI_UCS_BATCH_SIZE="${DCAI_UCS_BATCH_SIZE:-1}"
 }
 
 handle_gbfs_vars() {
     DCAI_OFFLINE_SEARCH_TEST="${DCAI_SEARCH_TEST_DATA:-$DCAI_OFFLINE_SEARCH_TEST}"
     if [ -z "$DCAI_SEARCH_TEST_DATA" ]; then
-        echo "WARNING: The argument '--search_test_data' was not given. By default, the following path will be used:"
+        echo ""
+        echo "=========== WARNING ==========="
+        echo "The argument '--search_test_data' was not given. By default, the following path will be used:"
         echo "$DCAI_OFFLINE_SEARCH_TEST"
+        echo "==============================="
+        echo ""
     fi
     # Set DCAI_RESULTS_DIR to DCAI_GBFS_RESULTS_DIR if '--gbfs_results_dir' is given as an arg, otherwise use the default path.
-    DCAI_RESULTS_DIR="deepcubeai/results/${DCAI_ENV}/${DCAI_GBFS_RESULTS_DIR:-"model=${DCAI_ENV_MODEL_NAME}_heur=${DCAI_HEUR_NNET_NAME}_GBFS_results"}"
+    DCAI_RESULTS_DIR="deepcubeai/results/${DCAI_ENV}/${DCAI_GBFS_RESULTS_DIR:-"model=${DCAI_ENV_MODEL_NAME}__heur=${DCAI_HEUR_NNET_NAME}_GBFS_results"}"
+    DCAI_SEARCH_ITRS="${DCAI_SEARCH_ITRS:-100}"
 }
 
 handle_data_viz_vars() {
@@ -471,9 +450,11 @@ handle_data_viz_vars() {
 check_variables() {
     for var in "$@"; do
         if [ -z "${!var}" ]; then
-            echo "-----------"
-            echo "ERROR: One or more required arguments are missing for the selected stage."
-            echo "-----------"
+            echo ""
+            echo "============ ERROR ============"
+            echo "One or more required arguments are missing for the selected stage."
+            echo "==============================="
+            echo ""
             unset_vars
             exit 1
         fi
@@ -561,6 +542,8 @@ elif [ "$DCAI_STAGE" == "disc_vs_cont" ]; then
 
 else
     echo "Invalid stage name: $DCAI_STAGE"
+    echo ""
+    show_help
     unset_vars
     exit 1
 fi

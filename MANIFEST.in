@@ -1,0 +1,7 @@
+include README.md
+include LICENSE
+include deepcubeai/scripts/*.sh
+recursive-include deepcubeai/data *
+recursive-include deepcubeai/environments/sokoban_data *
+recursive-include deepcubeai/environments/puzzlegen/data *
+global-exclude *.py[cod] __pycache__ .DS_Store .git .vscode
