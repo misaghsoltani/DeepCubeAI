@@ -5,7 +5,6 @@ import sys
 
 def main():
     dcai_dir = os.path.dirname(os.path.abspath(__file__))
-    print(dcai_dir)
     parent_dir = os.path.dirname(dcai_dir)
 
     # Forward all arguments to the pipeline script, running from the new directory
