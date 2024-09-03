@@ -357,8 +357,6 @@ def main():
     print(f"device: {device}, devices: {devices}, on_gpu: {on_gpu}")
 
     nnet_model.to(device)
-    if on_gpu and False:
-        nnet_model = nn.DataParallel(nnet_model)
 
     # load data
     print("Loading data ...")
