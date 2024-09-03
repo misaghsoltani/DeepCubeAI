@@ -338,46 +338,102 @@ handle_env_model_vars() {
     DCAI_PER_EQ_TOL="${DCAI_PER_EQ_TOL:-100}"
 }
 
-# Function to set up MPI environment and construct options
+# Check and set up MPI environment or fall back to single GPU mode
 setup_mpi() {
-    export OMPI_MCA_OPAL_CUDA_SUPPORT=true
-    HOSTS=$(scontrol show hostnames $SLURM_JOB_NODELIST)
-    NUM_NODES=$SLURM_JOB_NUM_NODES
-    NUM_WORKERS_PER_NODE=$(echo $SLURM_JOB_GPUS | awk -F, '{print NF}') #$(nvidia-smi --query-gpu=index --format=csv,noheader | wc -l)
-    TOTAL_WORKERS=0
-    H_OPTION=""
+    # Validate the structure of the variables
+    validate_structure() {
+        local valid=true
+        RED="\033[1;31m"
+        RESET="\033[0m"
 
-    # Construct -H option for mpirun
-    for HOST in $HOSTS; do
-        # # Get the IP address of the current host
-        # IP_ADDRESS=$(getent ahosts $HOST | head -n 1 | awk '{ print $1 }')
-        if [ -z "$H_OPTION" ]; then
-            NUM_WORKERS=$((NUM_WORKERS_PER_NODE)) # + 1))
-        else
-            NUM_WORKERS=$NUM_WORKERS_PER_NODE
+        # Check H_OPTION format (e.g., node1:4,node2:4)
+        if ! [[ "$H_OPTION" =~ ^([a-zA-Z0-9.-]+:[0-9]+,?)+$ ]]; then
+            echo -e "${RED}ERROR: Invalid H_OPTION format: '$H_OPTION'${RESET}"
+            echo -e "${RED}Example of a valid format: node1:4,node2:4${RESET}"
+            echo ""
+            valid=false
         fi
-        H_OPTION+="$HOST:$NUM_WORKERS,"
-        TOTAL_WORKERS=$((TOTAL_WORKERS + NUM_WORKERS))
-    done
-    H_OPTION=${H_OPTION::-1} # Remove the last comma
+        # Check MASTER_ADDR format (e.g., node1 or 192.168.1.1)
+        if ! [[ "$MASTER_ADDR" =~ ^([a-zA-Z0-9.-]+|([0-9]{1,3}\.){3}[0-9]{1,3})$ ]]; then
+            echo -e "${RED}ERROR: Invalid MASTER_ADDR format: '$MASTER_ADDR'${RESET}"
+            echo -e "${RED}Example of a valid format: node1 or 192.168.1.1${RESET}"
+            echo ""
+            valid=false
+        fi
+        # Check MASTER_PORT format (e.g., 3000)
+        if ! [[ "$MASTER_PORT" =~ ^[0-9]+$ ]]; then
+            echo -e "${RED}ERROR: Invalid MASTER_PORT format: '$MASTER_PORT'${RESET}"
+            echo -e "${RED}Example of a valid format: 3000${RESET}"
+            echo ""
+            valid=false
+        fi
+        # Check NP_OPTION format (e.g., 8)
+        if ! [[ "$NP_OPTION" =~ ^[0-9]+$ ]]; then
+            echo -e "${RED}ERROR: Invalid NP_OPTION format: '$NP_OPTION'${RESET}"
+            echo -e "${RED}Example of a valid format: 8${RESET}"
+            echo ""
+            valid=false
+        fi
+        $valid
+    }
 
-    # Set MASTER_ADDR and MASTER_PORT
-    MASTER_ADDR=$(echo "$H_OPTION" | cut -d, -f1 | cut -d: -f1)
-    MASTER_PORT=$(shuf -i 2000-65000 -n 1) # Generate a random port number between 2000 and 65000
+    if [ -n "$MASTER_ADDR" ] && [ -n "$MASTER_PORT" ] && [ -n "$H_OPTION" ] && [ -n "$NP_OPTION" ]; then
+        echo "Variables for running MPI job:"
+        echo "MASTER_ADDR=$MASTER_ADDR"
+        echo "MASTER_PORT=$MASTER_PORT"
+        echo "-H = $H_OPTION"
+        echo "-np = $NP_OPTION"
+        echo ""
 
-    NP_OPTION=$TOTAL_WORKERS #$((NUM_NODES * NUM_WORKERS_PER_NODE))
-    # export OMP_NUM_THREADS=$((SLURM_CPUS_PER_TASK - 2))
-    # export I_MPI_PIN_DOMAIN=omp
-    # export NCCL_DEBUG=INFO
+    # Check if the necessary SLURM variables for setting up MPI are available
+    elif [ -n "$SLURM_JOB_NODELIST" ] && [ -n "$SLURM_JOB_NUM_NODES" ] && [ -n "$SLURM_JOB_GPUS" ]; then
+        # Set up MPI environment and construct options
+        export OMPI_MCA_OPAL_CUDA_SUPPORT=true
+        HOSTS=$(scontrol show hostnames "$SLURM_JOB_NODELIST")
+        NUM_NODES="$SLURM_JOB_NUM_NODES"
+        NUM_WORKERS_PER_NODE=$(echo "$SLURM_JOB_GPUS" | awk -F, '{print NF}')
+        TOTAL_WORKERS=0
+        H_OPTION=""
 
-    # Output the MPI run command parameters
-    echo "Variables for running MPI job:"
-    echo "Nodes: $HOSTS"
-    echo "MASTER_ADDR=$MASTER_ADDR"
-    echo "MASTER_PORT=$MASTER_PORT"
-    echo "-H = $H_OPTION"
-    echo "-np = $NP_OPTION"
-    echo ""
+        # Construct -H option for mpirun
+        for HOST in $HOSTS; do
+            NUM_WORKERS=$NUM_WORKERS_PER_NODE
+            H_OPTION+="$HOST:$NUM_WORKERS,"
+            TOTAL_WORKERS=$((TOTAL_WORKERS + NUM_WORKERS))
+        done
+        H_OPTION=${H_OPTION::-1} # Remove the last comma
+
+        MASTER_ADDR=$(echo "$H_OPTION" | cut -d, -f1 | cut -d: -f1)
+        MASTER_PORT=$(shuf -i 2000-65000 -n 1) # Generate a random port number between 2000 and 65000
+
+        NP_OPTION=$TOTAL_WORKERS
+
+        echo "Variables for running MPI job:"
+        echo "Nodes: $HOSTS"
+        echo "MASTER_ADDR=$MASTER_ADDR"
+        echo "MASTER_PORT=$MASTER_PORT"
+        echo "-H = $H_OPTION"
+        echo "-np = $NP_OPTION"
+        echo ""
+
+    else
+        validate_structure
+        echo ""
+        echo -e "${RED}Necessary variables for MPI setup are not set. Using single GPU mode.${RESET}"
+        # If we are in a SLURM environment
+        if [ -n "$SLURM_JOB_ID" ]; then
+            echo -e "${RED}Please ensure that SLURM_JOB_NODELIST, SLURM_JOB_NUM_NODES, and SLURM_JOB_GPUS are set properly.${RESET}"
+        fi
+        echo ""
+        # Fallback to single GPU mode
+        DCAI_USE_DIST=false
+        return
+    fi
+
+    if ! validate_structure; then
+        # Fallback to single GPU mode
+        DCAI_USE_DIST=false
+    fi
 }
 
 handle_heur_model_vars() {
