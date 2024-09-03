@@ -13,25 +13,30 @@ This repository contains the code and materials for the paper [Learning Discrete
 
 ## Table of Contents
 
-- [About DeepCubeAI](#about-deepcubeai)
-  - [Key Contributions](#key-contributions)
-  - [Main Results](#main-results)
-- [Quick Start](#quick-start)
-  - [Installation using `pip`](#installation-using-pip)
-  - [Using the Repository Directly](#using-the-repository-directly)
-  - [Importing the Package in Python Code](#importing-the-package-in-python-code)
-- [Usage](#usage)
-  - [Running the `pip` Package](#running-the-pip-package)
-  - [Running the Code Directly from the Repository](#running-the-code-directly-from-the-repository)
-  - [Using the Package in Python Code](#using-the-package-in-python-code)
-  - [Reproducing the Results from the Paper](#reproducing-the-results-from-the-paper)
-    - [Running on command line](#running-on-command-line)
-    - [Running on a SLURM Cluster](#running-on-a-slurm-cluster)
-  - [Distributed Data Parallel (DDP) Training](#distributed-data-parallel-ddp-training)
-- [Environment Integration](#environment-integration)
-  - [Adding a New Environment](#adding-a-new-environment)
-- [Citation](#citation)
-- [Contact](#contact)
+1. [About DeepCubeAI](#about-deepcubeai)
+   - [Key Contributions](#key-contributions)
+     - [Discrete World Model](#discrete-world-model)
+     - [Generalizable Heuristic Function](#generalizable-heuristic-function)
+     - [Optimized Search](#optimized-search)
+   - [Main Results](#main-results)
+2. [Quick Start](#quick-start)
+   - [Installation using `pip`](#installation-using-pip)
+   - [Using the Repository Directly](#using-the-repository-directly)
+   - [Importing the Package in Python Code](#importing-the-package-in-python-code)
+3. [Usage](#usage)
+   - [Running the `pip` Package](#running-the-pip-package)
+   - [Running the Code Directly from the Repository](#running-the-code-directly-from-the-repository)
+   - [Using the Package in Python Code](#using-the-package-in-python-code)
+   - [Reproducing the Results from the Paper](#reproducing-the-results-from-the-paper)
+     - [Running the `pip` Package](#running-the-pip-package-1)
+     - [Running the Code Directly from the Repository](#running-the-code-directly-from-the-repository-1)
+     - [Running on a SLURM Cluster](#running-on-a-slurm-cluster)
+   - [Distributed Data Parallel (DDP) Training](#distributed-data-parallel-ddp-training)
+     - [Necessary Environment Variables](#necessary-environment-variables)
+4. [Environment Integration](#environment-integration)
+   - [Adding a New Environment](#adding-a-new-environment)
+5. [Citation](#citation)
+6. [Contact](#contact)
 
 
 
@@ -655,7 +660,7 @@ deepcubeai --stage train_heur --env <environment> --data_dir <env_data_dir> --da
 
 **--num_test**: Number of test states. Default is `1000`.
 
-**--use_dist**: Use distributed training for the heuristic network. If this arg given, it will use DDP for training. **Note:** Check out the [Distributed Data Parallel (DDP) Training](#distributed-data-parallel-ddp-training) section before using this argument.
+**--use_dist**: Use distributed training for the heuristic network. If this arg is given, it will use DDP for training. **Note:** Check out the [Distributed Data Parallel (DDP) Training](#distributed-data-parallel-ddp-training) section before using this argument.
 
 
 
@@ -1035,6 +1040,58 @@ The scripts for running the heuristic training stage using Distributed Data Para
 > [!IMPORTANT]
 >
 > Since we use the learned world model with hindsight experience replay (HER) for generating the training data for the Deep Q-Network, the data generation process is parallelized across available GPUs. However, the DDP training paradigm used in this implementation has an overhead in broadcasting/scattering the data across nodes after the data is generated in each iteration, and we want to train the heuristic network on the data generated. Therefore, if you are using a single-node multi-GPU setup, we recommend using the scripts without the `_ddp_heur` suffix, where the data generation and training is done using DataParallel on a single node.
+
+- **Environment Variables:** Ensure that necessary environment variables are correctly set. If not already set, the script will attempt to configure them based on SLURM job information or fall back to single GPU mode.
+- **SLURM Configuration:** Confirm that SLURM variables (`SLURM_JOB_NODELIST`, `SLURM_JOB_NUM_NODES`, `SLURM_JOB_GPUS`) are correctly configured if using a SLURM-managed cluster. The script will automatically set up MPI for distributed training if these variables are present (if the required variables have not been set manually).
+- **Note** that if the necessary configuration for distributed training is not met or is incorrect, the script will fall back to single GPU mode.
+
+#### Necessary Environment Variables
+
+1. **`MASTER_ADDR`**
+   - **Description**: The IP address or hostname of the master node.
+   - **Valid Formats**: String name or IP address format
+   - **Example**: `192.168.1.1`
+
+2. **`MASTER_PORT`**
+   - **Description**: The port number on the master node used for communication.
+   - **Valid Formats**: Numeric value
+   - **Example**: `29500`
+
+3. **`H_OPTION`**
+   - **Description**: The `-H` option string for `mpirun`, defining nodes and workers. Format is `node1:num_workers,node2:num_workers,...`
+   - **Valid Formats**: `node1:4,node2:4`
+   - **Example**: `node1:4,node2:4`
+
+4. **`NP_OPTION`**
+   - **Description**: The `-np` option for `mpirun` defining the total number of workers.
+   - **Valid Formats**: Numeric value
+   - **Example**: `8`
+
+If the above environment variables are not set, the script will attempt to configure them based on SLURM job information, if available. The following SLURM variables are used for setting up the MPI environment:
+
+1. **`SLURM_JOB_NODELIST`**
+   - **Description**: The list of nodes allocated for the job.
+   - **Valid Formats**: Comma-separated node names.
+   - **Example**: `node1,node2`
+
+2. **`SLURM_JOB_NUM_NODES`**
+   - **Description**: The total number of nodes allocated for the job.
+   - **Valid Formats**: Numeric value
+   - **Example**: `2`
+
+3. **`SLURM_JOB_GPUS`**
+   - **Description**: The GPUs allocated per node, typically a comma-separated list of GPU indices.
+   - **Valid Formats**: Comma-separated GPU indices.
+   - **Example**: `0,1,2,3`
+
+As an example, if you are running a job on a SLURM cluster with 2 nodes, each with 4 GPUs, the environment variables should be set as follows:
+
+```bash
+export MASTER_ADDR=node1
+export MASTER_PORT=29500
+export H_OPTION=node1:4,node2:4
+export NP_OPTION=8
+```
 
 
 ## Environment Integration
