@@ -66,7 +66,7 @@ QSTAR_WEIGHT=0.7
 QSTAR_H_WEIGHT=1.0
 QSTAR_BATCH_SIZE=1
 UCS_BATCH_SIZE=50
-current_time=$(date +"%Y%m%d_%H%M%S")$(($(date +%N) / 1000000))
+current_time=$(date +"%Y%m%d_%H%M%S")$(($(date +%N | bc)/1000000))
 RESULTS_DIR_QSTAR="model=${ENV_MODEL_NAME_DISC}__heur=${HEUR_NNET_NAME}_QSTAR_results/path_cost_weight=${QSTAR_WEIGHT}__h_weight=${QSTAR_H_WEIGHT}__batchsize=${QSTAR_BATCH_SIZE}_${current_time}"
 RESULTS_DIR_UCS="model=${ENV_MODEL_NAME_DISC}_UCS_results/batchsize=${UCS_BATCH_SIZE}_${current_time}"
 RESULTS_DIR_GBFS="model=${ENV_MODEL_NAME_DISC}__heur=${HEUR_NNET_NAME}_GBFS_results/${current_time}"
