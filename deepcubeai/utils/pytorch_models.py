@@ -198,8 +198,8 @@ class FullyConnectedModel(nn.Module):
             layer_norms (Optional[List[bool]], optional): List of layer normalization flags.
                 Defaults to None.
             dropouts (Optional[List[float]], optional): List of dropout rates. Defaults to None.
-            use_bias_with_norm (bool, optional): Whether to use bias with normalization. Defaults
-                to True.
+            use_bias_with_norm (bool, optional): Whether to use bias if the is a normalization immidiately
+                after the 
         """
         super().__init__()
         self.layers: nn.ModuleList = nn.ModuleList()
@@ -285,8 +285,8 @@ class ResnetModel(nn.Module):
             out_dim (int): Output dimension.
             batch_norm (bool): Whether to use batch normalization.
             act (str): Activation function.
-            use_bias_with_norm (bool, optional): Whether to use bias with normalization. Defaults
-                to True.
+            use_bias_with_norm (bool, optional): Whether to use bias if the is a normalization immidiately
+                after the 
         """
         super().__init__()
         self.blocks = nn.ModuleList()
@@ -374,10 +374,11 @@ class Conv2dModel(nn.Module):
             padding_values (Optional[List[Union[int, float]]], optional): List of padding values.
                 if padding mode = 'constant' padding will be filled with 'value' if specified,
                 otherwise 'zero'. Defaults to None.
-            group_norms (Optional[List[int]], optional): List of group normalization values.
+            group_norms (Optional[List[int]], optional): List of number of groups for
+                group normalization.
                 Defaults to None.
-            use_bias_with_norm (bool, optional): Whether to use bias with normalization. Defaults
-                to True.
+            use_bias_with_norm (bool, optional): Whether to use bias if there is a normalization
+                (such as BatchNorm or GroupNorm) used in this layer.
         """
         super().__init__()
         self.layers: nn.ModuleList = nn.ModuleList()
@@ -524,8 +525,8 @@ class ResnetConv2dModel(nn.Module):
             batch_norm (bool): Whether to use batch normalization.
             act (str): Activation function.
             group_norm (Optional[int], optional): Group normalization value. Defaults to 0.
-            use_bias_with_norm (bool, optional): Whether to use bias with normalization. Defaults
-                to True.
+            use_bias_with_norm (bool, optional): Whether to use bias if the is a normalization immidiately
+                after the 
         """
         super().__init__()
         self.blocks: nn.ModuleList = nn.ModuleList()

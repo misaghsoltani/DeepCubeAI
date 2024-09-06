@@ -178,8 +178,8 @@ class Autoencoder(nn.Module):
             states (Tensor): Input states.
 
         Returns:
-            Tuple[Tensor, Tensor, Tensor]: Encoded states, encoded states with dropout, and
-                reconstructed states.
+            Tuple[Tensor, Tensor, Tensor]: Encoded states, discrete encoded states
+                (after rounding), and reconstructed states.
         """
         enc, enc_d = self.encoder(states)
         recon = self.decoder(enc_d)
@@ -267,12 +267,12 @@ def step_model(
 
     Args:
         autoencoder (Autoencoder): Autoencoder model.
-        env_nnet (nn.Module): Environment neural network.
+        env_nnet (nn.Module): Environment model.
         state_episodes (List[np.ndarray]): List of state episodes.
         action_episodes (List[List[int]]): List of action episodes.
         start_idxs (np.array): Start indices.
         device (torch.device): Device to run the model on.
-        env_coeff (float): Environment coefficient.
+        env_coeff (float): Environment model weight.
 
     Returns:
         Tuple[Tensor, Tensor, Tensor, float, float, float, float, Tensor, Tensor]: Losses and
@@ -373,7 +373,7 @@ def train_nnet(autoencoder: Autoencoder, env_nnet: nn.Module, nnet_dir: str,
 
     Args:
         autoencoder (Autoencoder): Autoencoder model.
-        env_nnet (nn.Module): Environment neural network.
+        env_nnet (nn.Module): Environment model.
         nnet_dir (str): Directory to save the neural network.
         state_episodes_train (List[np.ndarray]): List of training state episodes.
         action_episodes_train (List[List[int]]): List of training action episodes.
@@ -385,7 +385,7 @@ def train_nnet(autoencoder: Autoencoder, env_nnet: nn.Module, nnet_dir: str,
         start_itr (int): Starting iteration.
         lr (float): Learning rate.
         lr_d (float): Learning rate decay.
-        env_coeff (float): Environment coefficient.
+        env_coeff (float): Environment model weight.
         only_env (bool): Whether to train only the environment model.
     """
     # initialize

@@ -110,10 +110,10 @@ def load_nnet(nnet_dir: str, env: Environment) -> nn.Module:
 
 def load_train_state(train_dir: str, nnet_model_dir: str,
                      env: Environment) -> Tuple[nn.Module, int]:
-    """Loads the training state.
+    """Loads the training data.
 
     Args:
-        train_dir (str): Directory of the training state.
+        train_dir (str): Directory of the training data.
         nnet_model_dir (str): Directory of the neural network model.
         env (Environment): The environment instance.
 
