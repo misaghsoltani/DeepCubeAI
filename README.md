@@ -139,6 +139,9 @@ conda activate deepcubeai_env
 > [!NOTE]  
 > The only difference between the macOS environment and the Linux/Windows environments is that `pytorch-cuda` is not installed for macOS, as it is not supported.
 
+> [!Note]
+> If CUDA is available on your system, by default, GPU will be used for training the models and the inference.
+
 After activating the environment, you can run the code using the `deepcubeai.sh` script. For detailed instructions on how to use the script, see the [Running the Code Directly from the Repository](#running-the-code-directly-from-the-repository) section. 
 
 
@@ -531,7 +534,7 @@ deepcubeai --stage test_model_cont --env <environment> --model_test_data_dir <mo
 Compare the performance of discrete and continuous models. This will run the models and take the same actions in the environment and compare the predictions with the ground truth given in the test data. Finally, it will plot the MSE of the predictions for both models over time steps.
 
 ```bash
-deepcubeai --stage disc_vs_cont --env <environment> --data_dir <env_data_dir> --data_file_name <plot_file_name> --env_model_dir_disc deepcubeai/saved_env_models/<disc_env_model_folder_name> --env_model_dir_cont deepcubeai/saved_env_models/<cont_env_model_folder_name> --save_dir deepcubeai/ --num_steps <steps> --num_episodes 100 --print_interval <interval>
+deepcubeai --stage disc_vs_cont --env <environment> --data_dir <env_data_dir> --data_file_name <plot_file_name> --env_model_dir_disc deepcubeai/saved_env_models/<disc_env_model_folder_name> --env_model_dir_cont deepcubeai/saved_env_models/<cont_env_model_folder_name> --save_dir deepcubeai/ --num_steps <steps> --num_episodes <num_episodes> --print_interval <interval>
 ```
 
 **--env**: Specifies the environment for which the comparison will be made.
@@ -687,7 +690,7 @@ deepcubeai --stage qstar --env <environment> --data_dir <env_data_dir> --data_fi
 
 **--env_model_name**: The name of the trained discrete world model to be used in the Q* search. This should match the model saved during the training stage, located in `deepcubeai/saved_env_models/<disc_env_model_folder_name>`, and follow the same structure mentioned in [Train Discrete World Model](#4-train-discrete-world-model).
 
-**--heur_nnet_name**: The name of the trained heuristic neural network to be used in the Q* search. This should match the model saved during the heuristic network training stage, located in `deepcubeai/saved_heur_models/<heur_nnet_folder_name>`, and follow the same structure mentioned in [Train Heuristic Network](#9-train-heuristic-network).
+**--heur_nnet_name**: The name of the trained heuristic neural network to be used in the Q* search. This should match the model saved during the heuristic network training stage, located in `deepcubeai/saved_heur_models/<heur_nnet_folder_name>`, and follow the same structure mentioned in [Train Heuristic Network](#9-train-heuristic-network), except for the `target` directory which is not used in the Q* search.
 
 **--qstar_batch_size**: The batch size for the Q* search. This indicates the number of nodes to expand in each iteration of the search. Default is `1`.
 
@@ -782,7 +785,7 @@ The results directory will have a similar structure to the [Q* Search results di
 #### 13. Run Greedy Best-First Search (GBFS)
 
 Run the Greedy Best-First Search algorithm. This implementation
- uses the trained discrete world model and heuristic neural network. The search will be performed by following the greedy policy based on the heuristic values.
+ uses the trained discrete world model and heuristic neural network. The search will be performed by following the greedy policy based on the heuristic values for the given number of iterations.
 
 ```bash
 deepcubeai --stage gbfs --env <environment> --data_dir <env_data_dir> --data_file_name <search_file_name> --env_model_name <disc_env_model_folder_name> --heur_nnet_name <heur_nnet_folder_name> --per_eq_tol <percentage_to_be_equal> --gbfs_results_dir "<results_dir>" --search_itrs <search_iterations> [--search_test_data <test_data_path>]
@@ -796,7 +799,7 @@ deepcubeai --stage gbfs --env <environment> --data_dir <env_data_dir> --data_fil
 
 **--env_model_name**: The name of the trained discrete world model to be used in the GBFS. This should match the model saved during the training stage, located in `deepcubeai/saved_env_models/<disc_env_model_folder_name>`, and follow the same structure mentioned in [Train Discrete World Model](#4-train-discrete-world-model).
 
-**--heur_nnet_name**: The name of the trained heuristic neural network to be used in the GBFS. This should match the model saved during the heuristic network training stage, located in `deepcubeai/saved_heur_models/<heur_nnet_folder_name>`, and follow the same structure mentioned in [Train Heuristic Network](#9-train-heuristic-network).
+**--heur_nnet_name**: The name of the trained heuristic neural network to be used in the GBFS. This should match the model saved during the heuristic network training stage, located in `deepcubeai/saved_heur_models/<heur_nnet_folder_name>`, and follow the same structure mentioned in [Train Heuristic Network](#9-train-heuristic-network). except for the `target` directory which is not used in the GBFS.
 
 **--per_eq_tol**: The percentage of latent state elements that need to be equal to declare two states as equal. Default is `100`.
 
@@ -1043,7 +1046,7 @@ The scripts for running the heuristic training stage using Distributed Data Para
 
 - **Environment Variables:** Ensure that necessary environment variables are correctly set. If not already set, the script will attempt to configure them based on SLURM job information or fall back to single GPU mode.
 - **SLURM Configuration:** Confirm that SLURM variables (`SLURM_JOB_NODELIST`, `SLURM_JOB_NUM_NODES`, `SLURM_JOB_GPUS`) are correctly configured if using a SLURM-managed cluster. The script will automatically set up MPI for distributed training if these variables are present (if the required variables have not been set manually).
-- **Note** that if the necessary configuration for distributed training is not met or is incorrect, the script will fall back to single GPU mode.
+- **Note** that if the necessary configuration for distributed training is not met or is incorrect, the script will fall back to the DataParallel training mode and only use the available GPUs on a single.
 
 #### Necessary Environment Variables
 
