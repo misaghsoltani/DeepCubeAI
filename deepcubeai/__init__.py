@@ -10,12 +10,24 @@ __all__ = ["__version__", "__author__"]
 
 
 def _env_pkg() -> ModuleType:
-    """Lazily import and return the environments package object."""
+    """Lazily import and return the environments package object.
+
+    This avoids importing the environments package (and thereby executing
+    any discovery) at top-level import time of `deepcubeai`. Callers that
+    need to interact with the registry should do so via the thin wrappers
+    below which import on demand.
+    """
     return importlib.import_module("deepcubeai.utils.env_utils")
 
 
 def register_env(key: str, cls: type) -> None:
-    """Register an environment class under `key`."""
+    """Register an environment class under `key`.
+
+    Usage from external packages:
+                   import deepcubeai
+
+                   deepcubeai.register_env("myenv", MyEnvClass)
+    """
     pkg = _env_pkg()
     # Expose 'register_environment'
     pkg.register_environment(key, cls)
