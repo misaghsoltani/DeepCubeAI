@@ -1,29 +1,30 @@
-from inspect import Parameter, signature
-from typing import Any, Callable, Type, TypeVar
+from __future__ import annotations
 
-T = TypeVar('T', bound=Type[Any])
+from collections.abc import Callable
+import contextlib
+from inspect import Parameter, signature
+from typing import Any, TypeVar
+
+T = TypeVar("T", bound=type[Any])
 
 
 class OptionalAbstractMethod:
-    """
-    A descriptor class that ensures an abstract method is implemented in a subclass before calling it.
+    """A descriptor class that ensures an abstract method is implemented in a subclass before calling it.
 
     Attributes:
         method (Callable[..., Any]): The abstract method to be checked.
     """
 
     def __init__(self, method: Callable[..., Any]) -> None:
-        """
-        Initializes the OptionalAbstractMethod descriptor.
+        """Initializes the OptionalAbstractMethod descriptor.
 
         Args:
             method (Callable[..., Any]): The abstract method to be checked.
         """
         self.method = method
 
-    def __get__(self, instance: T, owner: Type[T]) -> Any:
-        """
-        Gets the method implementation from the instance or raises an AttributeError if not implemented.
+    def __get__(self, instance: T | None, owner: type[T]) -> Any:
+        """Gets the method implementation from the instance or raises an AttributeError if not implemented.
 
         Args:
             instance (T): The instance of the class.
@@ -33,16 +34,17 @@ class OptionalAbstractMethod:
             Any: The method implementation if found, otherwise raises an AttributeError.
         """
         if instance is None:
+            # Accessed on the class, return the descriptor itself
             return self
+
         # Check if the method is implemented in the subclass
-        if self.method.__name__ not in instance.__class__.__dict__:
+        if not hasattr(instance.__class__, self.method.__name__):
             raise AttributeError(f"{self.method.__name__} is not implemented in {owner.__name__}")
         return self.method.__get__(instance, owner)
 
 
 def optional_abstract_method(func: Callable[..., Any]) -> OptionalAbstractMethod:
-    """
-    Decorator that ensures an abstract method is implemented in a subclass before calling it.
+    """Decorator that ensures an abstract method is implemented in a subclass before calling it.
 
     Args:
         func (Callable[..., Any]): The abstract method to be checked.
@@ -68,29 +70,31 @@ def enforce_init_defaults(cls: T) -> T:
     Raises:
         TypeError: If any parameter in the `__init__` method does not have a default value.
     """
-
     original_init_subclass = cls.__init_subclass__
 
-    @classmethod
-    def new_init_subclass(cls: Type[Any], **kwargs: Any) -> None:
+    def new_init_subclass(cls_inner: type[Any], /, **kwargs: Any) -> None:
         """Override for `__init_subclass__` to enforce default values for `__init__` parameters.
 
         Args:
+            cls_inner (type[Any]): The class being initialized.
             **kwargs (Any): Additional keyword arguments for the subclass initialization.
 
         Raises:
             TypeError: If any parameter in the `__init__` method does not have a default value.
         """
-        original_init_subclass(**kwargs)
-        init_signature = signature(cls.__init__)
+        # Call the original __init_subclass__ if present
+        with contextlib.suppress(TypeError):
+            original_init_subclass(**kwargs)
+        init_signature = signature(cls_inner.__init__)
 
         for param in init_signature.parameters.values():
-            if param.name == 'self':
+            if param.name == "self":
                 continue
             if param.default is Parameter.empty:
                 raise TypeError(
-                    f"All parameters in the '__init__' method of '{cls.__name__}' must have "
-                    f"default values, but parameter '{param.name}' does not.")
+                    f"All parameters in the '__init__' method of '{cls_inner.__name__}' must have "
+                    f"default values, but parameter '{param.name}' does not."
+                )
 
-    cls.__init_subclass__ = new_init_subclass
+    cls.__init_subclass__ = classmethod(new_init_subclass)  # type: ignore[assignment]
     return cls

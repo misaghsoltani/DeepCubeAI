@@ -1,19 +1,21 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.27.0,<2"]
+build-backend = "hatchling.build"
 
 [project]
 name = "deepcubeai"
 dynamic = ["version"]
 description = "Learning Discrete World Models for Heuristic Search"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 authors = [{ name = "Misagh Soltani", email = "msoltani@email.sc.edu" }]
-license = { text = "MIT License" }
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Typing :: Typed",
 ]
 keywords = [
     "DeepCubeAI",
@@ -37,18 +39,13 @@ keywords = [
     "Q* search",
 ]
 dependencies = [
-    'torch>=2.0',
-    'numpy == 1.*',
-    'matplotlib',
-    'scikit-learn',
-    'networkx',
-    'imageio',
-    'imageio-ffmpeg',
-    'gym',
-    'opencv-python-headless',
-    'openmpi',
-    'mpi',
-    'tensorboard',
+    "torch>=2.2.2, <3",
+    "numpy>=2.3.2, <3",
+    "matplotlib>=3.10.3, <4",
+    "networkx>=3.5, <4",
+    "opencv-python>=4.11.0.86, <5",
+    "tensorboard>=2.20.0, <3",
+    "gymnasium>=1.2.0, <2",
 ]
 
 [project.urls]
@@ -59,12 +56,77 @@ Paper = "https://rlj.cs.umass.edu/2024/papers/Paper225.html"
 [project.scripts]
 deepcubeai = "deepcubeai.main:main"
 
-[tool.setuptools.packages.find]
-include = ["deepcubeai*"]
-namespaces = false
+# [tool.hatchling.packages.find]
+# include = ["deepcubeai*"] # Only consider package names starting with deepcubeai (e.g. deepcubeai, deepcubeai.training, etc.) when auto-discovering packages
+# namespaces = false # Don't treat directories without an __init__.py as namespace packages; only folders with __init__.py count
 
-[tool.setuptools]
+[tool.hatchling]
 include-package-data = true
 
-[tool.setuptools.dynamic]
-version = { attr = "deepcubeai.__version__" }
+# [tool.hatch.metadata]
+# allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["deepcubeai"]
+include = [
+    "deepcubeai/environments/puzzlegen/data/**",
+    "deepcubeai/environments/sokoban_data/surface/**",
+    "deepcubeai/environments/sokoban_data/goal_states.zip",
+    "deepcubeai/data/cube3/search_test/search_test_data_reverse.pkl",
+    "deepcubeai/data/cube3/search_test/search_test_data.pkl",
+    "deepcubeai/data/sokoban/search_test/search_test_data.pkl",
+    "deepcubeai/environments/envs.json",
+    "deepcubeai/py.typed",
+    "README.md",
+]
+exclude = [
+    "*.py[cod]",
+    "__pycache__/**",
+    ".DS_Store",
+    ".git",
+    ".vscode",
+    "deepcubeai/saved_env_models/**",
+    "deepcubeai/saved_heur_models/**",
+    "deepcubeai/results/**",
+    "deepcubeai/plots/**",
+    "deepcubeai/data/**",
+]
+
+[tool.hatch.build.targets.sdist]
+packages = ["deepcubeai"]
+include = [
+    "deepcubeai/environments/puzzlegen/data/**",
+    "deepcubeai/environments/sokoban_data/surface/**",
+    "deepcubeai/environments/sokoban_data/goal_states.zip",
+    "deepcubeai/data/cube3/search_test/search_test_data_reverse.pkl",
+    "deepcubeai/data/cube3/search_test/search_test_data.pkl",
+    "deepcubeai/data/sokoban/search_test/search_test_data.pkl",
+    "deepcubeai/environments/envs.json",
+    "deepcubeai/py.typed",
+    "README.md",
+]
+exclude = [
+    "*.py[cod]",
+    "__pycache__/**",
+    ".DS_Store",
+    "deepcubeai/saved_env_models/**",
+    "deepcubeai/saved_heur_models/**",
+    "deepcubeai/results/**",
+    "deepcubeai/plots/**",
+    "deepcubeai/data/**",
+    ".vscode",
+    ".git",
+]
+
+[tool.hatch.version]
+path = "deepcubeai/__init__.py"
+
+[dependency-groups]
+default = ["deepcubeai"]
+dev = [{ include-group = "default" }, "ruff", "pyright"]
+build = [{ include-group = "default" }, "hatch"]
+all = [
+    { include-group = "default" },
+    { include-group = "dev" },
+    { include-group = "build" },
+]

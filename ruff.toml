@@ -1,0 +1,93 @@
+target-version = "py310" # Lint against Python 3.10 rules
+line-length = 120
+indent-width = 4
+preview = true
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    ".pixi",
+    ".shared_inductor_cache"
+]
+# extend-exclude = []
+fix = true # Auto-fix fixable lint errors
+
+[lint]
+fixable = ["ALL"] # Allow fix for all enabled rules (when '--fix') is provided.
+unfixable = []
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$" # Allow unused variables when underscore-prefixed.
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "D",   # pydocstyle
+    "ANN", # flake8-annotations (type hints)
+    "N",   # pep8-naming
+    "C4",  # comprehensions
+    "SIM", # flake8-simplify
+    "TID", # tidy imports
+    "PL",  # pylint
+]
+ignore = [
+    "D100", # Missing docstring in public module
+    "D104", # Missing docstring in public package
+    "D107", # Missing docstring in __init__
+    "PLR0904", # too many public methods
+    "PLR0913", # too many arguments
+    "PLR0911", # too many return statements
+    "PLR0915", # too many statements
+    "PLR0912", # too many branches
+    "N812", # lowercase package imoprted as non-lowercase
+    "PLR2004", # Magic value used in comparison
+    "PLR0914", # too many local variables
+    "PLR1702", # too many nested blocks
+    "N817", # CamelCase imported as UPPER_CASE
+    "ANN401", # Dynamic type
+    "PLR0916", # Too many boolean expressions
+]
+
+[lint.isort]
+known-first-party = ["deepcubeai"]
+known-third-party = ["torch", "numpy", "matplotlib", "networkx", "gymnasium", "opencv-python", "tensorboard"]
+combine-as-imports = true
+force-sort-within-sections = true
+split-on-trailing-comma=false # if true, split imports with trailing commas into multiple lines
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = true # if false, retain trailing commas when appropriate
+line-ending = "auto"  # Use OS-native line endings
+docstring-code-format = true
+docstring-code-line-length = "dynamic" # This only has an effect when the 'docstring-code-format' setting is enabled.
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.pylint]
+max-positional-args = 20

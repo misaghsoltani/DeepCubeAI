@@ -1,0 +1,165 @@
+name: Build & Publish (Pixi + Hatch + PyPI)
+
+# Triggers:
+#  * Push of a version tag starting with v (e.g. v1.2.3)
+#  * Manual dispatch
+on:
+  push:
+    tags:
+      - "v*" # Release tags trigger full publish
+  pull_request: # Validate build on PRs (no publish)
+    paths:
+      - "pyproject.toml"
+      - "deepcubeai/**"
+      - ".github/workflows/publish_to_pypi.yml"
+  workflow_dispatch: # Manual: can also trigger TestPyPI publish via input
+    inputs:
+      publish-testpypi:
+        description: "Also publish artifacts to TestPyPI (pre-release validation)"
+        required: false
+        type: boolean
+        default: false
+  workflow_call: # Allow other workflows to re-use build
+    inputs:
+      publish-testpypi:
+        required: false
+        type: boolean
+        default: false
+
+# Default to least-privilege. Jobs elevate only what they need
+permissions:
+  contents: read
+
+env:
+  # Ensures reproducible builds when hatch uses isolation
+  PIP_NO_PYTHON_VERSION_WARNING: "1"
+
+jobs:
+  build:
+    name: Reusable build (multi-env)
+    uses: ./.github/workflows/build_dist.yml
+    with:
+      pixi-environment: build
+
+  prep-artifacts:
+    name: Capture artifact outputs
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      artifact_names: ${{ steps.capture.outputs.artifact_names }}
+    steps:
+      - name: Expose artifact_names
+        id: capture
+        run: |
+          echo "artifact_names=${{ needs.build.outputs.artifact_names }}" >> "$GITHUB_OUTPUT"
+      - name: Show captured
+        run: |
+          echo "Captured artifact_names JSON: ${{ steps.capture.outputs.artifact_names }}"
+
+  publish-testpypi:
+    name: Publish to TestPyPI (pre-release)
+    needs: [build, prep-artifacts]
+    runs-on: ubuntu-latest
+    environment: testpypi
+    if: >-
+      (github.event_name == 'workflow_dispatch' && fromJSON(inputs.publish-testpypi)) ||
+      (github.event_name == 'workflow_call' && inputs.publish-testpypi == true)
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          merge-multiple: true
+          path: dist/
+
+      - name: Show artifact names output
+        run: |
+          echo "Artifacts JSON: ${{ needs.prep-artifacts.outputs.artifact_names }}" || true
+          echo "Parsed list:" && echo '${{ needs.prep-artifacts.outputs.artifact_names }}' | sed 's/[\[\]"]//g' | tr ',' '\n'
+
+      - name: Show artifacts (TestPyPI)
+        run: ls -l dist
+
+      - name: Publish distributions to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+          packages-dir: dist/
+          attestations: true
+
+  publish:
+    name: Publish to PyPI (Trusted Publishing)
+    needs: [build, prep-artifacts]
+    runs-on: ubuntu-latest
+    environment: pypi
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    # OIDC token permission required for trusted publishing
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download all dists
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          merge-multiple: true
+          path: dist/
+
+      - name: Show artifact names output
+        run: |
+          echo "Artifacts JSON: ${{ needs.prep-artifacts.outputs.artifact_names }}" || true
+          echo "Parsed list:" && echo '${{ needs.prep-artifacts.outputs.artifact_names }}' | sed 's/[\[\]"]//g' | tr ',' '\n'
+
+      - name: Show merged artifacts
+        run: ls -l dist
+
+      - name: Publish distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # Attestations are on by default for trusted publishing, but we keep this explicit
+          attestations: true
+          # Helpful when multiple envs produce identical files (avoids 409 conflicts)
+          skip-existing: true
+          packages-dir: dist/
+
+  provenance:
+    name: Generate build provenance (GitHub Attestations)
+    needs: [build, prep-artifacts]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          merge-multiple: true
+          path: dist/
+
+      - name: Show artifact names output
+        run: |
+          echo "Artifacts JSON: ${{ needs.prep-artifacts.outputs.artifact_names }}" || true
+          echo "Parsed list:" && echo '${{ needs.prep-artifacts.outputs.artifact_names }}' | sed 's/[\[\]"]//g' | tr ',' '\n'
+          ls -l dist || true
+
+      - name: Generate build provenance (SLSA v1 predicate)
+        id: attest
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
+        with:
+          subject-path: "dist/*"
+          show-summary: true
+
+      - name: Upload attestation bundle (for convenience)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: provenance-bundle
+          path: ${{ steps.attest.outputs.bundle-path }}

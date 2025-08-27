@@ -1,0 +1,21 @@
+name: deepcubeai-dev
+channels:
+  - https://prefix.dev/conda-forge
+  - nodefaults
+dependencies:
+  - python >=3.10,<3.13
+  - ruff *
+  - pyright >=1.1.403,<2
+  - shellcheck >=0.10.0,<0.11
+  - mypy >=1.17.0,<2
+  - types-networkx >=3.5.0.20250822,<4
+  - pip
+  - pip:
+      - -e .
+      - torch>=2.2.2, <3
+      - numpy>=2.3.2, <3
+      - matplotlib>=3.10.3, <4
+      - networkx>=3.5, <4
+      - opencv-python>=4.11.0.86, <5
+      - tensorboard>=2.20.0, <3
+      - gymnasium>=1.2.0, <2

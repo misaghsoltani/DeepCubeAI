@@ -1,0 +1,117 @@
+[workspace]
+platforms = ["linux-64", "linux-aarch64", "osx-arm64", "osx-64", "win-64"]
+name = "deepcubeai"
+readme = "README.md"
+authors = ["Misagh Soltani <msoltani@email.sc.edu>"]
+license = "MIT"
+license-file = "LICENSE"
+channels = ["https://prefix.dev/conda-forge"]
+preview = ["pixi-build"]
+
+
+[tasks]
+deepcubeai = "deepcubeai"
+
+[package]
+name = "deepcubeai"
+version = "0.2.0"
+
+
+[package.build]
+backend = { name = "pixi-build-python", version = "*", channels = [
+  "https://prefix.dev/pixi-build-backends",
+  "https://prefix.dev/conda-forge",
+] }
+config = { debug-dir = ".build-debug", extra-input-globs = [
+  "*.md",
+  "deepcubeai/environments/puzzlegen/data/**",
+  "deepcubeai/environments/sokoban_data/surface/**",
+  "deepcubeai/environments/sokoban_data/goal_states.zip",
+  "deepcubeai/data/cube3/search_test/search_test_data_reverse.pkl",
+  "deepcubeai/data/cube3/search_test/search_test_data.pkl",
+  "deepcubeai/data/sokoban/search_test/search_test_data.pkl",
+  "deepcubeai/environments/envs.json",
+  "README.md",
+  "deepcubeai/py.typed",
+] }
+
+[package.host-dependencies]
+hatchling = ">=1.27.0,<2"
+uv = "*"
+
+[package.build-dependencies]
+python = ">=3.10,<3.13"
+
+[environments]
+default = { solve-group = "default" }
+dev = { features = ["dev"], solve-group = "default" }
+cuda = { features = ["cuda"], solve-group = "default" }
+build = { features = ["build"], solve-group = "default" }
+all = { features = ["cuda", "dev", "build"], solve-group = "default" }
+glibc217 = { features = ["glibc217"], solve-group = "all" }
+
+# [tool.build-dependencies]
+# # hatchling = ">=1.27.0,<2"
+# python = ">=3.10,<3.13"
+
+[dependencies]
+python = ">=3.10,<3.13"
+
+[pypi-dependencies]
+deepcubeai = { path = ".", editable = true }
+torch = ">=2.2.2, <3"
+numpy = ">=2.3.2, <3"
+matplotlib = ">=3.10.3, <4"
+networkx = ">=3.5, <4"
+opencv-python = ">=4.11.0.86, <5"
+tensorboard = ">=2.20.0, <3"
+gymnasium = ">=1.2.0, <2"
+
+
+[feature.dev.dependencies]
+ruff = "*"
+pyright = ">=1.1.403,<2"
+shellcheck = ">=0.10.0,<0.11"
+mypy = ">=1.17.0,<2"
+types-networkx = ">=3.5.0.20250822,<4"
+yamllint = ">=1.37.1,<2"
+
+[feature.dev.tasks]
+lint = "ruff check --fix"
+ulint = "ruff check --fix --unsafe-fixes"
+format = "ruff format"
+fix = "ruff check --fix --unsafe-fixes; ruff format"
+mypy = "mypy deepcubeai"
+pyright = "pyright deepcubeai"
+
+[feature.glibc217.system-requirements]
+libc = { family = "glibc", version = "2.17" }
+
+[feature.cuda.system-requirements]
+cuda = "12"
+
+[feature.cuda.target.linux-64.dependencies]
+cuda = ">=12.9.1,<13"
+cuda-version = ">=12.9,<13"
+cudnn = ">=9.10.1.4,<10"
+cuda-toolkit = ">=12.9.1,<13"
+
+[feature.cuda.target.linux-aarch64.dependencies]
+cuda = ">=12.9.1,<13"
+cuda-version = ">=12.9,<13"
+cudnn = ">=9.10.1.4,<10"
+cuda-toolkit = ">=12.9.1,<13"
+
+[feature.cuda.target.win-64.dependencies]
+cuda = ">=12.9.1,<13"
+cuda-version = ">=12.9,<13"
+cudnn = ">=9.10.1.4,<10"
+cuda-toolkit = ">=12.9.1,<13"
+
+[feature.build.dependencies]
+hatch = "*"
+
+[feature.build.tasks]
+build = "hatch build -t wheel -t sdist"
+buildpy-clean = "hatch build -t wheel -t sdist --clean"
+build-all = "pixi build --clean -o dist && rm -rf .build-debug dist/linux-64 dist/win-64 dist/osx-64 dist/osx-arm64 dist/linux-aarch64 dist/noarch && hatch build -t wheel -t sdist --clean"

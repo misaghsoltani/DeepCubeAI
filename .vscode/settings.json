@@ -1,0 +1,146 @@
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}/.pixi/envs/all/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    "direnv.restart.automatic": true,
+    "python.pixiToolPath": "pixi",
+    "python.useEnvironmentsExtension": true,
+    "python.analysis.autoFormatStrings": true,
+    "python.analysis.autoIndent": true,
+    "python.analysis.enableColorPicker": true,
+    "python.analysis.enableTroubleshootMissingImports": true,
+    "python.analysis.indexing": true,
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.completeFunctionParens": true,
+    // "python.languageServer": "Pylance",
+    // ========== TERMINAL CONFIGURATION ==========
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PIXI_PROJECT_ROOT": "${workspaceFolder}"
+    },
+    "terminal.integrated.env.osx": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PIXI_PROJECT_ROOT": "${workspaceFolder}"
+    },
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PIXI_PROJECT_ROOT": "${workspaceFolder}"
+    },
+    // ========== SEARCH & EXCLUDE CONFIGURATION ==========
+    "search.exclude": {
+        "**/.pixi": true,
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true,
+        "**/.ruff_cache": true,
+        "**/*.egg-info": true,
+        "**/build": true,
+        "**/dist": true,
+    },
+    // "files.exclude": {
+    //     "**/.pixi": true,
+    //     "**/__pycache__": true,
+    //     "**/.pytest_cache": true,
+    //     "**/.mypy_cache": true,
+    //     "**/.ruff_cache": true,
+    //     "**/*.egg-info": true,
+    // },
+    "files.watcherExclude": {
+        "**/.pixi/**": true,
+        "**/__pycache__/**": true,
+        "**/.pytest_cache/**": true,
+        "**/.mypy_cache/**": true,
+        "**/.ruff_cache/**": true,
+    },
+    // ========== FILE ASSOCIATIONS ==========
+    "files.associations": {
+        "*.toml": "toml",
+        "pixi.lock": "yaml",
+        "*.yaml": "yaml",
+        "*.yml": "yaml",
+        "*.py": "python",
+        "*.pyx": "python",
+        "*.pyi": "python",
+        "*.ipynb": "jupyter",
+        "*.md": "markdown",
+        "*.txt": "plaintext",
+        "*.log": "log",
+        "*.conf": "ini",
+        "*.cfg": "ini",
+        "*.env": "properties",
+    },
+    "evenBetterToml.schema.associations": {
+        "**/pyproject.toml": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/pyproject.json",
+        "**/ruff.toml": "https://raw.githubusercontent.com/astral-sh/ruff/main/ruff.schema.json",
+    },
+    "yaml.schemaStore.enable": true,
+    "json.schemaDownload.enable": true,
+    "yaml.schemaStore.url": "https://www.schemastore.org/api/json/catalog.json",
+    "yaml.completion": true,
+    // ========== WORKSPACE SPECIFIC ==========
+    "explorer.compactFolders": false,
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.expand": true,
+    "explorer.fileNesting.patterns": {
+        "*.py": "$(capture).pyi",
+        "*.toml": "$(capture).lock",
+        "pixi.toml": "setup.cfg, MANIFEST.in, requirements*.txt, environment*.yml, mypy.ini, pyrightconfig.json, ruff.toml, .envrc, *.conda",
+        "requirements.txt": "requirements*.txt, requirements*.in",
+        "pyproject.toml": "pixi.lock, poetry.lock, Pipfile.lock, setup.cfg, MANIFEST.in, requirements*.txt, environment*.yml, mypy.ini, pyrightconfig.json, ruff.toml",
+        "setup.py": "setup.cfg, MANIFEST.in",
+        "*.md": "$(capture).*"
+    },
+    // ========== LINTING & FORMATTING ==========
+    "ruff.configurationPreference": "filesystemFirst",
+    "ruff.lint.enable": true,
+    "ruff.fixAll": true,
+    "ruff.importStrategy": "fromEnvironment",
+    "ruffRulesExplainer.showDecorations": true,
+    "ruff.lineLength": 120,
+    "ruff.exclude": [
+        "**/.pixi/**",
+        "**/outputs/**",
+        "**/logs/**",
+        "**/checkpoints/**",
+        "**/slurm_run_outputs/**"
+    ],
+    "ruff.nativeServer": "on",
+    // MyPy Configuration
+    "mypy-type-checker.args": [
+        "--config-file=${workspaceFolder}/mypy.ini"
+    ],
+    "mypy-type-checker.importStrategy": "fromEnvironment",
+    "mypy-type-checker.interpreter": [
+        "${workspaceFolder}/.pixi/envs/all/bin/python"
+    ],
+    "shellcheck.enable": true,
+    "shellcheck.enableQuickFix": true,
+    "shellcheck.run": "onType",
+    "shellcheck.executablePath": "${workspaceFolder}/.pixi/envs/all/bin/shellcheck", // Priority: user defined > bundled binary > shellcheck in PATH
+    "shellcheck.exclude": [],
+    "shellcheck.customArgs": [
+        "-x"
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.defaultPackageManager": "ms-python.python:pip",
+    "python-envs.pythonProjects": [],
+    "markdownlint.config": {
+        "MD033": {
+            "allowed_elements": [
+                "br"
+            ]
+        }
+    },
+    "yaml.schemas": {
+        "https://www.schemastore.org/github-action.json": [
+            "${workspaceFolder}/.github/workflows/publish_to_pypi.yml",
+            "${workspaceFolder}/.github/workflows/build_dist.yml",
+        ],
+        "https://raw.githubusercontent.com/astral-sh/ruff/main/ruff.schema.json": [
+            "${workspaceFolder}/ruff.toml"
+        ],
+        "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/pyproject.json": [
+            "${workspaceFolder}/pyproject.toml"
+        ]
+    }
+}

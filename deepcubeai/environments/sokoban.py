@@ -1,34 +1,33 @@
+from __future__ import annotations
+
 import os
 import pickle
+from typing import Any, cast
 import zipfile
-from typing import Any, List, Tuple
 
 import cv2
-import imageio
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy import float32, intp, uint8
+from numpy.typing import NDArray
 import torch
-import torch.nn.functional as F
 from torch import Tensor, nn
+import torch.nn.functional as F
 
 from deepcubeai.environments.environment_abstract import Environment, State
-from deepcubeai.utils.pytorch_models import (
-    Conv2dModel,
-    FullyConnectedModel,
-    ResnetModel,
-    STEThresh,
-)
+from deepcubeai.utils.misc_utils import imread_cv2
+from deepcubeai.utils.pytorch_models import Conv2dModel, FullyConnectedModel, ResnetModel, STEThresh
 
 
 class SokobanDQN(nn.Module):
+    """DQN model for the Sokoban environment."""
 
-    def _forward_unimplemented(self, *input_val: Any) -> None:
-        pass
-
-    def __init__(self, input_dim: int, h1_dim: int, resnet_dim: int, num_resnet_blocks: int,
-                 out_dim: int, batch_norm: bool):
-        """
-        Initializes the SokobanDQN model.
+    def __init__(
+        self, input_dim: int, h1_dim: int, resnet_dim: int, num_resnet_blocks: int, out_dim: int, batch_norm: bool
+    ) -> None:
+        """Initializes the SokobanDQN model.
 
         Args:
             input_dim (int): Input dimension.
@@ -39,13 +38,14 @@ class SokobanDQN(nn.Module):
             batch_norm (bool): Whether to use batch normalization.
         """
         super().__init__()
-        self.first_fc = FullyConnectedModel(input_dim * 2, [h1_dim, resnet_dim], [batch_norm] * 2,
-                                            ["RELU"] * 2)
-        self.resnet = ResnetModel(resnet_dim, num_resnet_blocks, out_dim, batch_norm, "RELU")
+
+        self.first_fc: nn.Module = FullyConnectedModel(
+            input_dim * 2, [h1_dim, resnet_dim], [batch_norm] * 2, ["RELU"] * 2
+        )
+        self.resnet: nn.Module = ResnetModel(resnet_dim, num_resnet_blocks, out_dim, batch_norm, "RELU")
 
     def forward(self, states: Tensor, states_goal: Tensor) -> Tensor:
-        """
-        Forward pass for the SokobanDQN model.
+        """Forward pass for the SokobanDQN model.
 
         Args:
             states (Tensor): Input tensor representing the states.
@@ -57,17 +57,14 @@ class SokobanDQN(nn.Module):
         x = self.first_fc(torch.cat((states, states_goal), dim=1))
         x = self.resnet(x)
 
-        return x
+        return cast(Tensor, x)
 
 
 class Encoder(nn.Module):
+    """Encoder model for the Sokoban environment."""
 
-    def _forward_unimplemented(self, *input_val: Any) -> None:
-        pass
-
-    def __init__(self, chan_in: int, chan_enc: int):
-        """
-        Initializes the Encoder model.
+    def __init__(self, chan_in: int, chan_enc: int) -> None:
+        """Initializes the Encoder model.
 
         Args:
             chan_in (int): Number of input channels.
@@ -75,39 +72,33 @@ class Encoder(nn.Module):
         """
         super().__init__()
 
-        self.encoder = nn.Sequential(
-            Conv2dModel(chan_in, [16, chan_enc], [2, 2], [0, 0], [True, False],
-                        ["RELU", "SIGMOID"],
-                        strides=[2, 2]),
+        self.encoder: nn.Sequential = nn.Sequential(
+            Conv2dModel(chan_in, [16, chan_enc], [2, 2], [0, 0], [True, False], ["RELU", "SIGMOID"], strides=[2, 2]),
             nn.Flatten(),
         )
 
-        self.ste_thresh = STEThresh()
+    # Thresholding uses ste_thresh_apply; no instance needed.
 
-    def forward(self, states: Tensor) -> Tuple[Tensor, Tensor]:
-        """
-        Forward pass for the Encoder model.
+    def forward(self, states: Tensor) -> tuple[Tensor, Tensor]:
+        """Forward pass for the Encoder model.
 
         Args:
             states (Tensor): Input tensor representing the states.
 
         Returns:
-            Tuple[Tensor, Tensor]: Encoded states and thresholded encoded states.
+            tuple[Tensor, Tensor]: Encoded states and thresholded encoded states.
         """
         encs = self.encoder(states)
-        encs_d = self.ste_thresh.apply(encs, 0.5)
+        encs_d = cast(Tensor, STEThresh.apply(encs, 0.5))
 
         return encs, encs_d
 
 
 class Decoder(nn.Module):
+    """Decoder model for the Sokoban environment."""
 
-    def _forward_unimplemented(self, *input_val: Any) -> None:
-        pass
-
-    def __init__(self, chan_in: int, chan_enc: int):
-        """
-        Initializes the Decoder model.
+    def __init__(self, chan_in: int, chan_enc: int) -> None:
+        """Initializes the Decoder model.
 
         Args:
             chan_in (int): Number of input channels.
@@ -117,17 +108,22 @@ class Decoder(nn.Module):
 
         self.chan_enc: int = chan_enc
 
-        self.decoder_conv = nn.Sequential(
-            Conv2dModel(self.chan_enc, [16, 16], [2, 2], [0, 0], [True, False],
-                        ["RELU", "SIGMOID"],
-                        strides=[2, 2],
-                        transpose=True),
+        self.decoder_conv: nn.Sequential = nn.Sequential(
+            Conv2dModel(
+                self.chan_enc,
+                [16, 16],
+                [2, 2],
+                [0, 0],
+                [True, False],
+                ["RELU", "SIGMOID"],
+                strides=[2, 2],
+                transpose=True,
+            ),
             Conv2dModel(16, [chan_in], [1], [0], [False], ["LINEAR"]),
         )
 
     def forward(self, encs: Tensor) -> Tensor:
-        """
-        Forward pass for the Decoder model.
+        """Forward pass for the Decoder model.
 
         Args:
             encs (Tensor): Input tensor representing the encoded states.
@@ -142,13 +138,10 @@ class Decoder(nn.Module):
 
 
 class EnvModel(nn.Module):
+    """Environment model for the Sokoban environment."""
 
-    def _forward_unimplemented(self, *input_val: Any) -> None:
-        pass
-
-    def __init__(self, num_actions: int, chan_enc: int):
-        """
-        Initializes the EnvModel.
+    def __init__(self, num_actions: int, chan_enc: int) -> None:
+        """Initializes the EnvModel.
 
         Args:
             num_actions (int): Number of actions.
@@ -158,15 +151,20 @@ class EnvModel(nn.Module):
         self.num_actions = num_actions
 
         self.chan_enc: int = chan_enc
-        self.mask_net = nn.Sequential(
-            Conv2dModel(self.chan_enc + 4, [32, 32, self.chan_enc], [3, 3, 3], [1, 1, 1],
-                        [True, True, False], ["RELU", "RELU", "SIGMOID"]),
+        self.mask_net: nn.Sequential = nn.Sequential(
+            Conv2dModel(
+                self.chan_enc + 4,
+                [32, 32, self.chan_enc],
+                [3, 3, 3],
+                [1, 1, 1],
+                [True, True, False],
+                ["RELU", "RELU", "SIGMOID"],
+            ),
             nn.Flatten(),
         )
 
     def forward(self, states: Tensor, actions: Tensor) -> Tensor:
-        """
-        Forward pass for the EnvModel.
+        """Forward pass for the EnvModel.
 
         Args:
             states (Tensor): Input tensor representing the states.
@@ -177,26 +175,22 @@ class EnvModel(nn.Module):
         """
         states_conv = states.view(-1, self.chan_enc, 10, 10)
 
-        actions_oh = F.one_hot(actions.long(), self.num_actions)
-        actions_oh = actions_oh.float()
-
+        actions_oh = F.one_hot(actions.long(), self.num_actions).float()
         actions_oh = actions_oh.view(-1, self.num_actions, 1, 1)
         actions_oh = actions_oh.repeat(1, 1, states_conv.shape[2], states_conv.shape[3])
 
         states_actions = torch.cat((states_conv.float(), actions_oh), dim=1)
+
         states_next = self.mask_net(states_actions)
 
-        return states_next
+        return cast(Tensor, states_next)
 
 
 class EnvModelContinuous(nn.Module):
+    """EnvModel for continuous actions."""
 
-    def _forward_unimplemented(self, *input_val: Any) -> None:
-        pass
-
-    def __init__(self, num_actions: int, chan_in: int, chan_enc: int):
-        """
-        Initializes the EnvModelContinuous.
+    def __init__(self, num_actions: int, chan_in: int, chan_enc: int) -> None:
+        """Initializes the EnvModelContinuous.
 
         Args:
             num_actions (int): Number of actions.
@@ -204,23 +198,24 @@ class EnvModelContinuous(nn.Module):
             chan_enc (int): Number of encoded channels.
         """
         super().__init__()
-        self.num_actions = num_actions
+        self.num_actions: int = num_actions
 
-        self.encoder = nn.Sequential(
-            Conv2dModel(chan_in, [16, chan_enc], [2, 2], [0, 0], [True, False],
-                        ["RELU", "SIGMOID"],
-                        strides=[2, 2]))
+        self.encoder: nn.Sequential = nn.Sequential(
+            Conv2dModel(chan_in, [16, chan_enc], [2, 2], [0, 0], [True, False], ["RELU", "SIGMOID"], strides=[2, 2])
+        )
 
-        self.env_model = nn.Sequential(
-            Conv2dModel(chan_enc + 4, [32, 32, chan_enc], [3, 3, 3], [1, 1, 1],
-                        [True, True, False], ["RELU", "RELU", "RELU"]),
-            Conv2dModel(chan_enc, [16, 16], [2, 2], [0, 0], [True, False], ["RELU", "SIGMOID"],
-                        strides=[2, 2],
-                        transpose=True), Conv2dModel(16, [chan_in], [1], [0], [False], ["LINEAR"]))
+        self.env_model: nn.Sequential = nn.Sequential(
+            Conv2dModel(
+                chan_enc + 4, [32, 32, chan_enc], [3, 3, 3], [1, 1, 1], [True, True, False], ["RELU", "RELU", "RELU"]
+            ),
+            Conv2dModel(
+                chan_enc, [16, 16], [2, 2], [0, 0], [True, False], ["RELU", "SIGMOID"], strides=[2, 2], transpose=True
+            ),
+            Conv2dModel(16, [chan_in], [1], [0], [False], ["LINEAR"]),
+        )
 
     def forward(self, states: Tensor, actions: Tensor) -> Tensor:
-        """
-        Forward pass for the EnvModelContinuous.
+        """Forward pass for the EnvModelContinuous.
 
         Args:
             states (Tensor): Input tensor representing the states.
@@ -229,47 +224,45 @@ class EnvModelContinuous(nn.Module):
         Returns:
             Tensor: Next states after applying the actions.
         """
-        # encode
         states_conv = self.encoder(states)
 
-        # preprocess actions
-        actions_oh = F.one_hot(actions.long(), self.num_actions)
-        actions_oh = actions_oh.float()
-
+        actions_oh = F.one_hot(actions.long(), self.num_actions).float()
         actions_oh = actions_oh.view(-1, self.num_actions, 1, 1)
         actions_oh = actions_oh.repeat(1, 1, states_conv.shape[2], states_conv.shape[3])
 
-        # get next states
         states_actions = torch.cat((states_conv.float(), actions_oh), dim=1)
+
         states_next = self.env_model(states_actions)
 
-        return states_next
+        return cast(Tensor, states_next)
 
 
 class SokobanState(State):
+    """Sokoban state."""
+
     __slots__ = ["agent", "walls", "boxes", "hash", "seed"]
 
-    def __init__(self, agent: np.array, boxes: np.ndarray, walls: np.ndarray, seed: int = None):
-        """
-        Initializes the SokobanState.
+    def __init__(
+        self, agent: NDArray[intp], boxes: NDArray[intp], walls: NDArray[intp], seed: int | None = None
+    ) -> None:
+        """Initializes the SokobanState.
 
         Args:
-            agent (np.array): Agent's position.
-            boxes (np.ndarray): Boxes' positions.
-            walls (np.ndarray): Walls' positions.
+            agent (np.NDArray): Agent's position.
+            boxes (np.NDArray): Boxes' positions.
+            walls (np.NDArray): Walls' positions.
             seed (int, optional): Random seed. Defaults to None.
         """
         super().__init__()
-        self.agent: np.array = agent
-        self.boxes: np.ndarray = boxes
-        self.walls: np.ndarray = walls
-        self.seed = seed
+        self.agent: NDArray[intp] = agent
+        self.boxes: NDArray[intp] = boxes
+        self.walls: NDArray[intp] = walls
+        self.seed: int | None = seed
 
-        self.hash = None
+        self.hash: int | None = None
 
     def __hash__(self) -> int:
-        """
-        Computes the hash of the state.
+        """Computes the hash of the state.
 
         Returns:
             int: Hash value of the state.
@@ -284,8 +277,7 @@ class SokobanState(State):
         return self.hash
 
     def __eq__(self, other: Any) -> bool:
-        """
-        Checks if two states are equal.
+        """Checks if two states are equal.
 
         Args:
             other (Any): Another state to compare with.
@@ -300,18 +292,18 @@ class SokobanState(State):
         return agents_eq and boxes_eq and walls_eq
 
 
-def load_states(file_name: str) -> List[SokobanState]:
-    """
-    Loads Sokoban states from a file.
+def load_states(file_name: str) -> list[SokobanState]:
+    """Loads Sokoban states from a file.
 
     Args:
         file_name (str): Path to the file containing the states.
 
     Returns:
-        List[SokobanState]: List of loaded Sokoban states.
+        list[SokobanState]: List of loaded Sokoban states.
     """
-    states_np = pickle.load(open(file_name, "rb"))
-    states: List[SokobanState] = []
+    with open(file_name, "rb") as f:
+        states_np: NDArray[uint8] = pickle.load(f)
+    states: list[SokobanState] = []
 
     agent_idxs = np.where(states_np == 1)
     box_masks = states_np == 2
@@ -325,29 +317,28 @@ def load_states(file_name: str) -> List[SokobanState]:
     return states
 
 
-def _get_surfaces() -> List[np.ndarray]:
-    """
-    Loads surface images for Sokoban.
+def _get_surfaces() -> list[NDArray[uint8]]:
+    """Loads surface images for Sokoban.
 
     Returns:
-        List[np.ndarray]: List of surface images.
+        list[NDArray]: List of surface images.
     """
-    img_dir = "deepcubeai/environments/sokoban_data/surface"
+    base_dir = os.path.dirname(__file__)
+    img_dir: str = os.path.join(base_dir, "sokoban_data", "surface")
 
-    # Load images, representing the corresponding situation
-    box = imageio.imread(f"{img_dir}/box.png")
-    floor = imageio.imread(f"{img_dir}/floor.png")
-    player = imageio.imread(f"{img_dir}/player.png")
-    wall = imageio.imread(f"{img_dir}/wall.png")
+    # Load images
+    box: NDArray[uint8] = imread_cv2(os.path.join(img_dir, "box.png"), dtype=uint8)
+    floor: NDArray[uint8] = imread_cv2(os.path.join(img_dir, "floor.png"), dtype=uint8)
+    player: NDArray[uint8] = imread_cv2(os.path.join(img_dir, "player.png"), dtype=uint8)
+    wall: NDArray[uint8] = imread_cv2(os.path.join(img_dir, "wall.png"), dtype=uint8)
 
-    surfaces = [wall, floor, player, box]
+    surfaces: list[NDArray[uint8]] = [wall, floor, player, box]
 
     return surfaces
 
 
 def _env_data_exists(dir: str, item_name: str) -> bool:
-    """
-    Checks if the specified item (file or folder) exists and processes a ZIP file if needed.
+    """Checks if the specified item (file or folder) exists and processes a ZIP file if needed.
 
     This function performs the following actions:
     1. Checks if the `item_name` (file or folder) exists in the given directory (`dir`).
@@ -375,11 +366,10 @@ def _env_data_exists(dir: str, item_name: str) -> bool:
     if os.path.exists(zip_path):
         print(f"ZIP file '{name_zip}' found in '{dir}'.\nExtracting contents...")
 
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            extracted_files: List[str] = zip_ref.namelist()
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            extracted_files: list[str] = zip_ref.namelist()
             if not extracted_files:
-                raise ValueError(
-                    f"The ZIP file '{name_zip}' is empty or does not contain any files.")
+                raise ValueError(f"The ZIP file '{name_zip}' is empty or does not contain any files.")
 
             zip_ref.extractall(dir)
 
@@ -391,10 +381,10 @@ def _env_data_exists(dir: str, item_name: str) -> bool:
 
 
 class Sokoban(Environment):
+    """A Sokoban environment with a player and a box."""
 
-    def __init__(self, dim: int = 10, num_boxes: int = 4):
-        """
-        Initializes the Sokoban environment.
+    def __init__(self, dim: int = 10, num_boxes: int = 4) -> None:
+        """Initializes the Sokoban environment.
 
         Args:
             dim (int): Dimension of the environment. Default is 10.
@@ -407,14 +397,14 @@ class Sokoban(Environment):
 
         self.num_moves: int = 4
 
-        goal_states_dir: str = "deepcubeai/environments/sokoban_data"
+        base_dir = os.path.dirname(__file__)
+        goal_states_dir: str = os.path.join(base_dir, "sokoban_data")
         goal_states_filename: str = "goal_states.pkl"
         assert _env_data_exists(goal_states_dir, goal_states_filename), (
-            f"Expected '{goal_states_filename}' or '{goal_states_filename[:-4]}.zip' to " +
-            f"exist in '{goal_states_dir}'")
+            f"Expected '{goal_states_filename}' or '{goal_states_filename[:-4]}.zip' to exist in '{goal_states_dir}'"
+        )
 
-        self.states_train: List[SokobanState] = load_states(
-            os.path.join(goal_states_dir, goal_states_filename))
+        self.states_train: list[SokobanState] = load_states(os.path.join(goal_states_dir, goal_states_filename))
 
         self.img_dim: int = 40
         self.chan_enc: int = 16
@@ -422,11 +412,12 @@ class Sokoban(Environment):
         enc_w: int = 10
         self.enc_dim: int = enc_h * enc_w * self.chan_enc
 
-        self.enc_hw: Tuple[int, int] = (enc_h, enc_w)
+        self.enc_hw: tuple[int, int] = (enc_h, enc_w)
 
         self._surfaces = _get_surfaces()
 
-    def get_env_name(self) -> str:
+    @property
+    def env_name(self) -> str:
         """Gets the name of the environment.
 
         Returns:
@@ -436,43 +427,42 @@ class Sokoban(Environment):
 
     @property
     def num_actions_max(self) -> int:
-        """
-        Returns the maximum number of actions.
+        """Returns the maximum number of actions.
 
         Returns:
             int: Maximum number of actions.
         """
         return self.num_moves
 
-    def rand_action(self, states: List[State]) -> List[int]:
-        """
-        Generates random actions for the given states.
+    def rand_action(self, states: list[State]) -> list[int]:
+        """Generates random actions for the given states.
 
         Args:
-            states (List[State]): List of states.
+            states (list[State]): List of states.
 
         Returns:
-            List[int]: List of random actions.
+            list[int]: List of random actions.
         """
         return list(np.random.randint(0, self.num_moves, size=len(states)))
 
-    def next_state(self, states: List[SokobanState],
-                   actions: List[int]) -> Tuple[List[SokobanState], List[float]]:
-        """
-        Computes the next state and transition cost given the current state and action.
+    def next_state(self, states: list[State], actions: list[int]) -> tuple[list[State], list[float]]:
+        """Computes the next state and transition cost given the current state and action.
 
         Args:
-            states (List[SokobanState]): List of current states.
-            actions (List[int]): List of actions to take.
+            states (list[State]): List of current states.
+            actions (list[int]): List of actions to take.
 
         Returns:
-            Tuple[List[SokobanState], List[float]]: Next states and transition costs.
+            tuple[list[State], list[float]]: Next states and transition costs.
         """
-        agent = np.stack([state.agent for state in states], axis=0)
-        boxes = np.stack([state.boxes for state in states], axis=0)
-        walls_next = np.stack([state.walls for state in states], axis=0)
+        states_cast: list[SokobanState] = [s for s in states if isinstance(s, SokobanState)]
+        assert len(states_cast) == len(states)
 
-        idxs_arange = np.arange(0, len(states))
+        agent = np.stack([state.agent for state in states_cast], axis=0)
+        boxes = np.stack([state.boxes for state in states_cast], axis=0)
+        walls_next = np.stack([state.walls for state in states_cast], axis=0)
+
+        idxs_arange = np.arange(0, len(states_cast))
         agent_next_tmp = self._get_next_idx(agent, actions)
         agent_next = np.zeros(agent_next_tmp.shape, dtype=int)
 
@@ -509,19 +499,16 @@ class Sokoban(Environment):
         agent_next[agent_empty] = agent_next_tmp[agent_empty]
         boxes_next[agent_empty] = boxes[agent_empty]
 
-        states_next: List[SokobanState] = []
-        for idx in range(len(states)):
-            state_next: SokobanState = SokobanState(agent_next[idx], boxes_next[idx],
-                                                    walls_next[idx])
-            states_next.append(state_next)
+        states_next: list[State] = [
+            SokobanState(agent_next[i], boxes_next[i], walls_next[i]) for i in range(len(states_cast))
+        ]
 
-        transition_costs: List[int] = [1 for _ in range(len(states))]
+        transition_costs: list[float] = [1.0 for _ in range(len(states_cast))]
 
         return states_next, transition_costs
 
     def get_dqn(self) -> nn.Module:
-        """
-        Returns the DQN model for the Sokoban environment.
+        """Returns the DQN model for the Sokoban environment.
 
         Returns:
             nn.Module: DQN model.
@@ -530,17 +517,16 @@ class Sokoban(Environment):
 
         return nnet
 
-    def state_to_real(self, states: List[SokobanState]) -> np.ndarray:
-        """
-        Converts states to real-world observations.
+    def state_to_real(self, states: list[State]) -> NDArray[float32]:
+        """Converts states to real-world observations.
 
         Args:
-            states (List[SokobanState]): List of states.
+            states (list[State]): List of states.
 
         Returns:
-            np.ndarray: Real-world observations.
+            NDArray: Real-world observations.
         """
-        states_real: np.ndarray = np.zeros((len(states), self.img_dim, self.img_dim, 3))
+        states_real: NDArray[float32] = np.zeros((len(states), self.img_dim, self.img_dim, 3), dtype=float32)
         for state_idx, state in enumerate(states):
             states_real[state_idx] = self.state_to_rgb(state)
 
@@ -549,8 +535,7 @@ class Sokoban(Environment):
         return states_real
 
     def get_env_nnet(self) -> nn.Module:
-        """
-        Returns the neural network model for the environment.
+        """Returns the neural network model for the environment.
 
         Returns:
             nn.Module: Neural network model.
@@ -558,8 +543,7 @@ class Sokoban(Environment):
         return EnvModel(self.num_actions_max, self.chan_enc)
 
     def get_env_nnet_cont(self) -> nn.Module:
-        """
-        Returns the neural network model for the environment for the continuous setting.
+        """Returns the neural network model for the environment for the continuous setting.
 
         Returns:
             nn.Module: Neural network model.
@@ -567,8 +551,7 @@ class Sokoban(Environment):
         return EnvModelContinuous(self.num_actions_max, 3, self.chan_enc)
 
     def get_encoder(self) -> nn.Module:
-        """
-        Returns the encoder model.
+        """Returns the encoder model.
 
         Returns:
             nn.Module: Encoder model.
@@ -576,67 +559,68 @@ class Sokoban(Environment):
         return Encoder(3, self.chan_enc)
 
     def get_decoder(self) -> nn.Module:
-        """
-        Returns the decoder model.
+        """Returns the decoder model.
 
         Returns:
             nn.Module: Decoder model.
         """
         return Decoder(3, self.chan_enc)
 
-    def is_solved(self, states: List[SokobanState], states_goal: List[SokobanState]) -> np.array:
-        """
-        Checks if the states are solved.
+    @staticmethod
+    def is_solved(states: list[State], states_goal: list[State]) -> NDArray[np.bool_]:
+        """Checks if the states are solved.
 
         Args:
-            states (List[SokobanState]): List of states.
-            states_goal (List[SokobanState]): List of goal states.
+            states (list[State]): List of states.
+            states_goal (list[State]): List of goal states.
 
         Returns:
-            np.array: Boolean array indicating whether each state is solved.
+            NDArray: Boolean array indicating whether each state is solved.
         """
-        boxes = np.stack([state.boxes for state in states], axis=0)
-        walls = np.stack([state.walls for state in states], axis=0)
+        states_cast: list[SokobanState] = [s for s in states if isinstance(s, SokobanState)]
+        states_goal_cast: list[SokobanState] = [s for s in states_goal if isinstance(s, SokobanState)]
+        assert len(states_cast) == len(states) and len(states_goal_cast) == len(states_goal)
 
-        # agent_goal = np.stack([state.agent for state in states_goal], axis=0)
-        boxes_goal = np.stack([state.boxes for state in states_goal], axis=0)
-        walls_goal = np.stack([state.walls for state in states_goal], axis=0)
+        boxes = np.stack([state.boxes for state in states_cast], axis=0)
+        walls = np.stack([state.walls for state in states_cast], axis=0)
 
-        # agent_same = np.all(agent == agent_goal, axis=1)
+        boxes_goal = np.stack([state.boxes for state in states_goal_cast], axis=0)
+        walls_goal = np.stack([state.walls for state in states_goal_cast], axis=0)
+
         boxes_same = np.all(boxes == boxes_goal, axis=(1, 2))
         walls_same = np.all(walls == walls_goal, axis=(1, 2))
 
-        is_solved_arr = boxes_same & walls_same
-
+        is_solved_arr: NDArray[np.bool_] = cast(NDArray[np.bool_], boxes_same & walls_same)
         return is_solved_arr
 
-    def generate_start_states(self, num_states: int) -> List[SokobanState]:
+    def generate_start_states(self, num_states: int, level_seeds: list[int] | None = None) -> list[State]:
         """Generates a list of start states for the Sokoban environment.
 
         Args:
             num_states (int): Number of start states to generate.
+            level_seeds (list[int] | None): Optional per-level seeds (unused).
 
         Returns:
-            List[SokobanState]: List of generated start states.
+            list[State]: List of generated start states.
         """
         state_idxs = np.random.randint(0, len(self.states_train), size=num_states)
-        states: List[SokobanState] = [self.states_train[idx] for idx in state_idxs]
+        states: list[State] = [self.states_train[idx] for idx in state_idxs]
 
-        step_range: Tuple[int, int] = (0, 100)
+        step_range: tuple[int, int] = (0, 100)
 
         # Initialize
-        scrambs: List[int] = list(range(step_range[0], step_range[1] + 1))
+        scrambs: list[int] = list(range(step_range[0], step_range[1] + 1))
 
         # Scrambles
-        step_nums: np.ndarray = np.random.choice(scrambs, num_states)
-        step_nums_curr: np.ndarray = np.zeros(num_states)
+        step_nums: NDArray[intp] = np.random.choice(scrambs, num_states).astype(intp, copy=False)
+        step_nums_curr: NDArray[intp] = np.zeros(num_states, dtype=intp)
 
         # Go backward from goal state
         steps_lt = step_nums_curr < step_nums
         while np.any(steps_lt):
-            idxs: np.ndarray = np.where(steps_lt)[0]
+            idxs: NDArray[intp] = np.where(steps_lt)[0]
 
-            states_to_move: List[SokobanState] = [states[idx] for idx in idxs]
+            states_to_move: list[State] = [states[idx] for idx in idxs]
             actions = list(np.random.randint(0, self.num_moves, size=len(states_to_move)))
 
             states_moved, _ = self.next_state(states_to_move, actions)
@@ -644,79 +628,78 @@ class Sokoban(Environment):
             for idx_moved, idx in enumerate(idxs):
                 states[idx] = states_moved[idx_moved]
 
-            step_nums_curr[idxs] = step_nums_curr[idxs] + 1
+            step_nums_curr[idxs] += 1
             steps_lt[idxs] = step_nums_curr[idxs] < step_nums[idxs]
 
         return states
 
-    def get_render_array(self, state: SokobanState) -> np.ndarray:
+    def get_render_array(self, state: SokobanState) -> NDArray[uint8]:
         """Generates a 2D array representation of the state for rendering.
 
         Args:
-            state (SokobanState): The current state of the environment.
+            state (State): The current state of the environment.
 
         Returns:
-            np.ndarray: 2D array representation of the state.
+            NDArray: 2D array representation of the state.
         """
-        state_rendered = np.ones((self.dim, self.dim), dtype=int)
-        state_rendered -= state.walls
+        state_rendered: NDArray[uint8] = np.ones((self.dim, self.dim), dtype=uint8)
+        state_rendered -= state.walls.astype(uint8)
         state_rendered[state.agent[0], state.agent[1]] = 2
-        state_rendered += state.boxes * 2
+        state_rendered += state.boxes.astype(uint8) * 2
 
         return state_rendered
 
-    def state_to_rgb(self, state: SokobanState) -> np.ndarray:
+    def state_to_rgb(self, state: State) -> NDArray[float32]:
         """Converts the state to an RGB image.
 
         Args:
-            state (SokobanState): The current state of the environment.
+            state (State): The current state of the environment.
 
         Returns:
-            np.ndarray: RGB image representation of the state.
+            NDArray: RGB image representation of the state.
         """
-        room = self.get_render_array(state)
+        room = self.get_render_array(cast(SokobanState, state))
 
         # Assemble the new rgb_room, with all loaded images
-        room_rgb = np.zeros(shape=(room.shape[0] * 16, room.shape[1] * 16, 3), dtype=np.uint8)
+        room_rgb: NDArray[uint8] = np.zeros(shape=(room.shape[0] * 16, room.shape[1] * 16, 3), dtype=uint8)
         for i in range(room.shape[0]):
             x_i = i * 16
 
             for j in range(room.shape[1]):
                 y_j = j * 16
                 surfaces_id = room[i, j]
+                room_rgb[x_i : (x_i + 16), y_j : (y_j + 16), :] = self._surfaces[surfaces_id]
 
-                room_rgb[x_i:(x_i + 16), y_j:(y_j + 16), :] = self._surfaces[surfaces_id]
+        room_rgb_float: NDArray[float32] = (room_rgb.astype(float32) / 255).astype(float32)
+        room_rgb_resized = cv2.resize(room_rgb_float, (self.img_dim, self.img_dim))
+        room_rgb_float = np.asarray(room_rgb_resized).astype(float32, copy=False)
 
-        room_rgb = room_rgb / 255
+        return room_rgb_float
 
-        room_rgb = cv2.resize(room_rgb, (self.img_dim, self.img_dim))
-
-        return room_rgb
-
-    def _get_next_idx(self, curr_idxs: np.ndarray, actions: List[int]) -> np.ndarray:
+    def _get_next_idx(self, curr_idxs: NDArray[intp], actions: list[int]) -> NDArray[intp]:
         """Computes the next indices for the agent based on the current indices and actions.
 
         Args:
-            curr_idxs (np.ndarray): Current indices of the agent.
-            actions (List[int]): List of actions to be taken.
+            curr_idxs (np.NDArray): Current indices of the agent.
+            actions (list[int]): List of actions to be taken.
 
         Returns:
-            np.ndarray: Next indices of the agent.
+            NDArray: Next indices of the agent.
         """
-        actions_np: np.ndarray = np.array(actions)
-        next_idxs: np.ndarray = curr_idxs.copy()
+        actions_np: NDArray[intp] = np.array(actions)
+        next_idxs: NDArray[intp] = curr_idxs.copy()
 
         action_idxs = np.where(actions_np == 0)[0]
-        next_idxs[action_idxs, 0] = next_idxs[action_idxs, 0] - 1
+        next_idxs[action_idxs, 0] -= 1
 
         action_idxs = np.where(actions_np == 1)[0]
-        next_idxs[action_idxs, 0] = next_idxs[action_idxs, 0] + 1
+        next_idxs[action_idxs, 0] += 1
 
         action_idxs = np.where(actions_np == 2)[0]
-        next_idxs[action_idxs, 1] = next_idxs[action_idxs, 1] - 1
+        next_idxs[action_idxs, 1] -= 1
 
         action_idxs = np.where(actions_np == 3)[0]
-        next_idxs[action_idxs, 1] = next_idxs[action_idxs, 1] + 1
+        next_idxs[action_idxs, 1] += 1
 
         next_idxs = np.maximum(next_idxs, 0)
         next_idxs = np.minimum(next_idxs, self.dim - 1)
@@ -724,29 +707,32 @@ class Sokoban(Environment):
         return next_idxs
 
 
-class InteractiveEnv(plt.Axes):
+class InteractiveEnv(Axes):
+    """Interactive environment for the Sokoban game."""
 
-    def __init__(self, env: Sokoban, fig: plt.Figure):
-        """Initializes the interactive environment for visualization.
+    def __init__(self, env: Sokoban, fig: Figure) -> None:
+        """Initializes the interactive environment for Sokoban.
 
         Args:
             env (Sokoban): The Sokoban environment.
             fig (plt.Figure): The matplotlib figure for rendering.
         """
         self.env = env
-        self.state = None
+        self.state: State | None = None
+        self.state_goal: State | None = None
 
-        super(InteractiveEnv, self).__init__(plt.gcf(), [0, 0, 1, 1])
+        super().__init__(fig, (0.0, 0.0, 1.0, 1.0))
 
         callbacks = fig.canvas.callbacks.callbacks
-        del callbacks["key_press_event"]
+        if "key_press_event" in callbacks:
+            del callbacks["key_press_event"]
 
         self.figure.canvas.mpl_connect("key_press_event", self._key_press)
 
         self._get_instance()
         self._update_plot()
 
-        self.move = []
+        self.move: list[int] = []
 
     def _get_instance(self) -> None:
         """Generates a new instance of the environment."""
@@ -757,6 +743,7 @@ class InteractiveEnv(plt.Axes):
     def _update_plot(self) -> None:
         """Updates the plot with the current state and goal state."""
         self.clear()
+        assert self.state is not None and self.state_goal is not None
         rendered_im = self.env.state_to_rgb(self.state)
         rendered_im_goal = self.env.state_to_rgb(self.state_goal)
 
@@ -770,6 +757,7 @@ class InteractiveEnv(plt.Axes):
             event (Any): The key press event.
         """
         if event.key.upper() in "ASDW":
+            assert self.state is not None and self.state_goal is not None
             action: int = -1
             if event.key.upper() == "W":
                 action = 0
@@ -788,6 +776,7 @@ class InteractiveEnv(plt.Axes):
             self._get_instance()
             self._update_plot()
         elif event.key.upper() == "P":
+            assert self.state is not None
             for _ in range(1000):
                 action = self.env.rand_action([self.state])[0]
                 self.state = self.env.next_state([self.state], [action])[0][0]
@@ -798,7 +787,7 @@ def main() -> None:
     """Main function to run the interactive Sokoban environment."""
     env: Sokoban = Sokoban(10, 4)
 
-    fig = plt.figure(figsize=(5, 5))
+    fig: Figure = plt.figure(figsize=(5, 5))
     interactive_env = InteractiveEnv(env, fig)
     fig.add_axes(interactive_env)
 

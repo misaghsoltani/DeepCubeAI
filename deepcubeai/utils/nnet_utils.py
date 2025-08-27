@@ -1,67 +1,109 @@
-import os
-import re
+from __future__ import annotations
+
 from collections import OrderedDict
-from typing import Callable, List, Optional, Tuple
+from collections.abc import Callable
+import os
+from types import FunctionType
+from typing import TypeAlias
 
 import numpy as np
+from numpy import float32
+from numpy.typing import NDArray
 import torch
 from torch import nn
 
+CallableModelType: TypeAlias = Callable[[NDArray[float32], NDArray[float32]], NDArray[float32]] | FunctionType
 
-def get_device() -> Tuple[torch.device, List[int], bool]:
-    """
-    Gets the appropriate device for computation (CPU, CUDA, or MPS).
+
+def get_device() -> tuple[torch.device, list[int], bool]:
+    """Return the available compute device, logical device IDs, and a boolean for GPU/accelerator use.
+
+    Order of preference:
+      1) CUDA/ROCm (device type 'cuda')
+      2) Intel XPU (device type 'xpu')
+      3) Apple Metal (device type 'mps')
+      4) CPU
 
     Returns:
-        Tuple[torch.device, List[int], bool]: A tuple containing the device, list of device IDs,
-            and a boolean indicating if GPU is used.
+        (device, devices, on_gpu):
+            device: torch.device to place new tensors/models on.
+            devices: logical device indices for the selected backend (e.g., [0,1,2,...]).
+            on_gpu: True if using any GPU/accelerator backend (CUDA/XPU/MPS), else False.
     """
     device: torch.device = torch.device("cpu")
-    devices: List[int] = []
+    devices: list[int] = []
     on_gpu: bool = False
 
-    if ("CUDA_VISIBLE_DEVICES" in os.environ) and torch.cuda.is_available():
-        device = torch.device("cuda:0")
-        devices = [int(x) for x in os.environ["CUDA_VISIBLE_DEVICES"].split(",")]
+    # CUDA / ROCm (device type is still "cuda")
+    if torch.cuda.is_available():
+        num_visible = torch.cuda.device_count()
+        if num_visible > 0:
+            # Respect torchrun / DDP conventions
+            local_rank_str = os.environ.get("LOCAL_RANK")
+            try:
+                local_rank = int(local_rank_str) if local_rank_str is not None else 0
+            except ValueError:
+                local_rank = 0
+            if not (0 <= local_rank < num_visible):
+                local_rank = 0
+
+            # Pin current process to its device
+            torch.cuda.set_device(local_rank)
+            device = torch.device(f"cuda:{local_rank}")
+
+            devices = list(range(num_visible))  # CUDA_VISIBLE_DEVICES may remap them
+            on_gpu = True
+            return device, devices, on_gpu
+
+    # Intel XPU
+    # Use guard for older versions of PyTorch
+    if hasattr(torch, "xpu") and getattr(torch.xpu, "is_available", lambda: False)():
+        num_visible = torch.xpu.device_count()
+        if num_visible > 0:
+            local_rank_str = os.environ.get("LOCAL_RANK")
+            try:
+                local_rank = int(local_rank_str) if local_rank_str is not None else 0
+            except ValueError:
+                local_rank = 0
+            if not (0 <= local_rank < num_visible):
+                local_rank = 0
+
+            torch.xpu.set_device(local_rank)
+            device = torch.device(f"xpu:{local_rank}")
+            devices = list(range(num_visible))
+            on_gpu = True
+            return device, devices, on_gpu
+
+    # Apple Metal (MPS)
+    # Single logical device today - no device_count API
+    if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
+        device = torch.device("mps")
+        devices = [0]
         on_gpu = True
+        return device, devices, on_gpu
 
-    # TODO: MPS is not tested yet
-    # elif torch.backends.mps.is_available():
-    #     print("\n============\nWARNING: The Metal Performance Shaders (MPS) backend is being ",
-    #           "used for GPU training acceleration with torch.float32. However, this code has ",
-    #           "not been tested on the MPS backend!\n============\n")
-    #     torch.set_default_dtype(torch.float32)
-    #     device = torch.device("mps")
-    #     devices = [0]
-    #     on_gpu = True
-
+    # CPU fallback
     return device, devices, on_gpu
 
 
-def load_nnet(model_file: str,
-              nnet: nn.Module,
-              device: Optional[torch.device] = None) -> nn.Module:
-    """
-    Loads a neural network from a file.
+def load_nnet(model_file: str, nnet: nn.Module, device: torch.device | None = None) -> nn.Module:
+    """Loads a neural network from a file.
 
     Args:
         model_file (str): Path to the model file.
         nnet (nn.Module): The neural network module to load the state dict into.
-        device (Optional[torch.device]): The device to map the model to.
+        device (torch.device | None): The device to map the model to.
 
     Returns:
         nn.Module: The loaded neural network.
     """
     if device is None:
-        state_dict = torch.load(model_file, map_location=torch.device("cpu"))
-    else:
-        state_dict = torch.load(model_file, map_location=device)
+        device = torch.device("cpu")
 
-    # remove module prefix
-    new_state_dict = OrderedDict()
-    for k, v in state_dict.items():
-        k = re.sub(r"^module\.", "", k)
-        new_state_dict[k] = v
+    state_dict = torch.load(model_file, map_location=device)
+
+    # Remove common Distributed/DataParallel 'module.' prefix if present
+    new_state_dict = OrderedDict({(k[7:] if k.startswith("module.") else k): v for k, v in state_dict.items()})
 
     # set state dict
     nnet.load_state_dict(new_state_dict)
@@ -73,12 +115,9 @@ def load_nnet(model_file: str,
 
 
 def get_heuristic_fn(
-        nnet: nn.Module,
-        device: torch.device,
-        clip_zero: bool = False,
-        batch_size: Optional[int] = None) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
-    """
-    Returns a heuristic function that computes the cost to go from states to goal states.
+    nnet: nn.Module, device: torch.device, clip_zero: bool = False, batch_size: int | None = None
+) -> CallableModelType:
+    """Returns a heuristic function that computes the cost to go from states to goal states.
 
     Args:
         nnet (nn.Module): The neural network module.
@@ -87,12 +126,12 @@ def get_heuristic_fn(
         batch_size (Optional[int], optional): The batch size for processing. Defaults to None.
 
     Returns:
-        Callable[[np.ndarray, np.ndarray], np.ndarray]: The heuristic function.
+        Callable[[NDArray, NDArray], NDArray]: The heuristic function.
     """
     nnet.eval()
 
-    def heuristic_fn(states_np: np.ndarray, states_goal_np: np.ndarray) -> np.ndarray:
-        cost_to_go_l: List[np.ndarray] = []
+    def heuristic_fn(states_np: NDArray[float32], states_goal_np: NDArray[float32]) -> NDArray[float32]:
+        cost_to_go_l: list[NDArray[float32]] = []
         num_states: int = states_np.shape[0]
 
         batch_size_inst: int = num_states
@@ -108,14 +147,15 @@ def get_heuristic_fn(
             states_batch = torch.tensor(states_np[start_idx:end_idx], device=device)
             states_goal_batch = torch.tensor(states_goal_np[start_idx:end_idx], device=device)
 
-            cost_to_go_batch: np.ndarray = nnet(states_batch, states_goal_batch).cpu().data.numpy()
+            cost_to_go_batch: NDArray[float32] = nnet(states_batch, states_goal_batch).cpu().data.numpy()
             cost_to_go_l.append(cost_to_go_batch)
 
             start_idx = end_idx
 
         cost_to_go = np.concatenate(cost_to_go_l, axis=0)
-        assert cost_to_go.shape[0] == num_states, (f"Shape of cost_to_go is {cost_to_go.shape} "
-                                                   f"num states is {num_states}")
+        assert cost_to_go.shape[0] == num_states, (
+            f"Shape of cost_to_go is {cost_to_go.shape} num states is {num_states}"
+        )
 
         if clip_zero:
             cost_to_go = np.maximum(cost_to_go, 0.0)
@@ -125,12 +165,8 @@ def get_heuristic_fn(
     return heuristic_fn
 
 
-def get_model_fn(
-        nnet: nn.Module,
-        device: torch.device,
-        batch_size: Optional[int] = None) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
-    """
-    Returns a model function that computes the next states given current states and actions.
+def get_model_fn(nnet: nn.Module, device: torch.device, batch_size: int | None = None) -> CallableModelType:
+    """Returns a model function that computes the next states given current states and actions.
 
     Args:
         nnet (nn.Module): The neural network module.
@@ -138,12 +174,12 @@ def get_model_fn(
         batch_size (Optional[int], optional): The batch size for processing. Defaults to None.
 
     Returns:
-        Callable[[np.ndarray, np.ndarray], np.ndarray]: The model function.
+        Callable[[NDArray, NDArray], NDArray]: The model function.
     """
     nnet.eval()
 
-    def model_fn(states_np: np.ndarray, actions_np: np.ndarray) -> np.ndarray:
-        states_next_l: List[np.ndarray] = []
+    def model_fn(states_np: NDArray[float32], actions_np: NDArray[float32]) -> NDArray[float32]:
+        states_next_l: list[NDArray[float32]] = []
         num_states: int = states_np.shape[0]
 
         batch_size_inst: int = num_states
@@ -155,15 +191,15 @@ def get_model_fn(
             # get batch
             end_idx: int = min(start_idx + batch_size_inst, num_states)
 
-            states_batch_np: np.ndarray = states_np[start_idx:end_idx]
-            actions_batch_np: np.ndarray = actions_np[start_idx:end_idx]
+            states_batch_np: NDArray[float32] = states_np[start_idx:end_idx]
+            actions_batch_np: NDArray[float32] = actions_np[start_idx:end_idx]
 
             # get nnet output
             states_batch = torch.tensor(states_batch_np, device=device).float()
             actions_batch = torch.tensor(actions_batch_np, device=device).float()
 
-            states_next_batch_np: np.ndarray = nnet(states_batch, actions_batch).cpu().data.numpy()
-            states_next_l.append(states_next_batch_np.round().astype(np.uint8))
+            states_next_batch_np: NDArray[float32] = nnet(states_batch, actions_batch).cpu().data.numpy()
+            states_next_l.append(states_next_batch_np.round().astype(float32))
 
             start_idx = end_idx
 
@@ -175,14 +211,13 @@ def get_model_fn(
     return model_fn
 
 
-def get_available_gpu_nums() -> List[int]:
-    """
-    Gets the list of available GPU numbers from the environment variable.
+def get_available_gpu_nums() -> list[int]:
+    """Gets the list of available GPU numbers from the environment variable.
 
     Returns:
-        List[int]: A list of available GPU numbers.
+        list[int]: A list of available GPU numbers.
     """
-    gpu_nums: List[int] = []
+    gpu_nums: list[int] = []
     if ("CUDA_VISIBLE_DEVICES" in os.environ) and (len(os.environ["CUDA_VISIBLE_DEVICES"]) > 0):
         gpu_nums = [int(x) for x in os.environ["CUDA_VISIBLE_DEVICES"].split(",")]
 
@@ -190,15 +225,15 @@ def get_available_gpu_nums() -> List[int]:
 
 
 def load_heuristic_fn(
-        nnet_dir: str,
-        device: torch.device,
-        on_gpu: bool,
-        nnet: nn.Module,
-        clip_zero: bool = False,
-        gpu_num: int = -1,
-        batch_size: Optional[int] = None) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
-    """
-    Loads a heuristic function from a neural network.
+    nnet_dir: str,
+    device: torch.device,
+    on_gpu: bool,
+    nnet: nn.Module,
+    clip_zero: bool = False,
+    gpu_num: int = -1,
+    batch_size: int | None = None,
+) -> CallableModelType:
+    """Loads a heuristic function from a neural network.
 
     Args:
         nnet_dir (str): Directory containing the neural network model.
@@ -210,7 +245,7 @@ def load_heuristic_fn(
         batch_size (Optional[int], optional): The batch size for processing. Defaults to None.
 
     Returns:
-        Callable[[np.ndarray, np.ndarray], np.ndarray]: The heuristic function.
+        Callable[[NDArray, NDArray], NDArray]: The heuristic function.
     """
     if (gpu_num >= 0) and on_gpu:
         os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_num)
@@ -223,20 +258,20 @@ def load_heuristic_fn(
     if on_gpu:
         nnet = nn.DataParallel(nnet)
 
-    heuristic_fn = get_heuristic_fn(nnet, device, clip_zero=clip_zero, batch_size=batch_size)
+    heuristic_fn: CallableModelType = get_heuristic_fn(nnet, device, clip_zero=clip_zero, batch_size=batch_size)
 
     return heuristic_fn
 
 
 def load_model_fn(
-        model_file: str,
-        device: torch.device,
-        on_gpu: bool,
-        nnet: nn.Module,
-        gpu_num: int = -1,
-        batch_size: Optional[int] = None) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
-    """
-    Loads a model function from a neural network.
+    model_file: str,
+    device: torch.device,
+    on_gpu: bool,
+    nnet: nn.Module,
+    gpu_num: int = -1,
+    batch_size: int | None = None,
+) -> CallableModelType:
+    """Loads a model function from a neural network.
 
     Args:
         model_file (str): Path to the model file.
@@ -247,7 +282,7 @@ def load_model_fn(
         batch_size (Optional[int], optional): The batch size for processing. Defaults to None.
 
     Returns:
-        Callable[[np.ndarray, np.ndarray], np.ndarray]: The model function.
+        Callable[[NDArray, NDArray], NDArray]: The model function.
     """
     if (gpu_num >= 0) and on_gpu:
         os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_num)

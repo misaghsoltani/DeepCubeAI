@@ -1,17 +1,36 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from inspect import signature
-from typing import List, Optional, Tuple
+from typing import Any
 
 import numpy as np
+from numpy import float32, intp
+from numpy.typing import NDArray
 from torch import nn
 
 from deepcubeai.utils.decorators import enforce_init_defaults, optional_abstract_method
 
 
 class State(ABC):
+    """Abstract base class for environment states.
 
-    def __init__(self):
-        self.seed = None
+    Attributes:
+        seed: Optional seed value for random number generation.
+    """
+
+    def __init__(self) -> None:
+        self.seed: int | None = None
+
+    @abstractmethod
+    def __hash__(self) -> int:
+        """Hash method for the state."""
+        pass
+
+    @abstractmethod
+    def __eq__(self, other: object) -> bool:
+        """Equality method for the state."""
+        pass
 
     @optional_abstract_method
     def get_opt_path_len(self) -> int:
@@ -20,83 +39,99 @@ class State(ABC):
         Returns:
             int: The length of the optimal path.
         """
+        raise NotImplementedError()
 
     @optional_abstract_method
-    def get_solution(self) -> List[int]:
+    def get_solution(self) -> list[int]:
         """Get the list of actions to be taken to get to the goal.
 
         Returns:
-            List[int]: The list of actions to be taken to get to the goal.
+            list[int]: The list of actions to be taken to get to the goal.
         """
+        raise NotImplementedError()
 
 
 @enforce_init_defaults
 class Environment(ABC):
+    """Abstract base class for environments.
 
-    def __init__(self):
-        self.dtype = float
+    Attributes:
+        dtype: Data type for numerical computations.
+        fixed_actions: Whether the environment has a fixed set of actions.
+    """
+
+    def __init__(self) -> None:
+        # dtype is a type-like field used by environments (e.g., numpy scalar types)
+        self.dtype: type[Any] = float
         self.fixed_actions: bool = True
 
+    @property
     @abstractmethod
-    def get_env_name(self) -> str:
+    def env_name(self) -> str:
         """Gets the name of the environment.
 
         Returns:
             str: The name of the environment.
         """
+        pass
 
     @property
     @abstractmethod
-    def num_actions_max(self):
+    def num_actions_max(self) -> int:
+        """Get the maximum number of actions.
+
+        Returns:
+            int: Maximum number of actions.
+        """
         pass
 
     @abstractmethod
-    def next_state(self, states: List[State],
-                   actions: List[int]) -> Tuple[List[State], List[float]]:
+    def next_state(self, states: list[State], actions: list[int]) -> tuple[list[State], list[float]]:
         """Get the next state and transition cost given the current state and action.
 
         Args:
-            states (List[State]): List of states.
-            actions (List[int]): Actions to take.
+            states (list[State]): List of states.
+            actions (list[int]): Actions to take.
 
         Returns:
-            Tuple[List[State], List[float]]: Next states, transition costs. Input states may
+            tuple[list[State], list[float]]: Next states, transition costs. Input states may
                 be modified!
         """
 
     @abstractmethod
-    def rand_action(self, states: List[State]) -> List[int]:
+    def rand_action(self, states: list[State]) -> list[int]:
         """Get random actions that could be taken in each state.
 
         Args:
-            states (List[State]): List of states.
+            states (list[State]): List of states.
 
         Returns:
-            List[int]: List of random actions.
+            list[int]: List of random actions.
         """
 
+    @staticmethod
     @abstractmethod
-    def is_solved(self, states: List[State], states_goal: List[State]) -> np.array:
+    def is_solved(states: list[State], states_goal: list[State]) -> NDArray[np.bool_]:
         """Returns whether or not state is solved.
 
         Args:
-            states (List[State]): List of states.
-            states_goal (List[State]): List of goal states.
+            states (list[State]): List of states.
+            states_goal (list[State]): List of goal states.
 
         Returns:
-            np.array: Boolean numpy array where the element at index i corresponds to whether or
+            NDArray: Boolean numpy array where the element at index i corresponds to whether or
                 not the state at index i is solved.
         """
 
     @abstractmethod
-    def state_to_real(self, states: List[State]) -> np.ndarray:
+    def state_to_real(self, states: list[State]) -> NDArray[float32]:
         """State to real-world observation.
 
         Args:
-            states (List[State]): List of states.
+            states (list[State]): List of states.
 
         Returns:
-            np.ndarray: A numpy array.
+            NDArray: A numpy array.
         """
 
     @abstractmethod
@@ -140,64 +175,68 @@ class Environment(ABC):
         """
 
     @abstractmethod
-    def generate_start_states(self,
-                              num_states: int,
-                              level_seeds: Optional[List[int]] = None) -> List[State]:
+    def generate_start_states(self, num_states: int, level_seeds: list[int] | None = None) -> list[State]:
+        """Generate start states for the environment.
+
+        Args:
+            num_states: Number of states to generate.
+            level_seeds: Optional list of seeds for level generation.
+
+        Returns:
+            List of generated start states.
+        """
         pass
 
     @optional_abstract_method
-    def get_goals(self, states: List[State], num_steps: Optional[int]) -> List[State]:
+    @staticmethod
+    def get_goals(states: list[State], num_steps: int | None) -> list[State]:
         """Get the goal states for the input list of states.
 
         Args:
-            states (List[State]): List of states.
+            states (list[State]): List of states.
             num_steps (Optional[int]): Number of random steps to be taken to specify the resulting
                 state as a goal state. This may or may not be used in different environments.
 
         Returns:
-            List[State]: List of goal states.
+            list[State]: List of goal states.
         """
+        raise NotImplementedError()
 
     def generate_episodes(
-        self,
-        num_steps_l: List[float],
-        start_level_seed: Optional[int] = -1,
-        num_levels: Optional[int] = -1
-    ) -> Tuple[List[State], List[State], List[List[State]], List[List[int]]]:
+        self, num_steps_l: list[float], start_level_seed: int | None = -1, num_levels: int | None = -1
+    ) -> tuple[list[State], list[State], list[list[State]], list[list[int]]]:
         """Generate episodes based on the given parameters.
 
         Args:
-            num_steps_l (List[float]): List of number of steps for each trajectory.
+            num_steps_l (list[float]): List of number of steps for each trajectory.
             start_level_seed (Optional[int], optional): Starting seed for level generation,
                 defaults to -1.
             num_levels (Optional[int], optional): Number of levels to generate, defaults to -1.
 
         Returns:
-            Tuple[List[State], List[State], List[List[State]], List[List[int]]]: Tuple containing
+            tuple[list[State], list[State], list[list[State]], list[list[int]]]: Tuple containing
                 start states, goal states, trajectories, and action trajectories.
         """
-
         num_trajs: int = len(num_steps_l)
 
-        # Check if the implemented method 'generate_start_states()' accepts 'level_seeds' as
-        # an argument
+        # Check if the implemented method 'generate_start_states()' accepts 'level_seeds' as an argument
         has_arg: bool = "level_seeds" in signature(self.generate_start_states).parameters
 
         # Initialize
-        states: List[State]
+        states: list[State]
         if has_arg:
             # Calculating the seeds
-            seeds_lst: List[int] = None
-            if (num_levels > 0) or (start_level_seed > -1):
-                if num_levels < 1:
+            seeds_lst: list[int] | None = None
+            if (num_levels is not None and num_levels > 0) or (start_level_seed is not None and start_level_seed > -1):
+                if num_levels is None or num_levels < 1:
                     num_levels = num_trajs
 
-                elif start_level_seed < 0:
+                if start_level_seed is None or start_level_seed < 0:
                     start_level_seed = np.random.randint(0, 1000000)
 
                 trajs_per_level = num_trajs // num_levels
                 extra_trajs = num_trajs % num_levels
-                levels = np.arange(start_level_seed, start_level_seed + num_levels)
+                levels: NDArray[intp] = np.arange(start_level_seed, start_level_seed + num_levels, dtype=intp)
                 seeds_np = np.concatenate((np.tile(levels, trajs_per_level), levels[:extra_trajs]))
                 np.random.shuffle(seeds_np)
                 seeds_lst = seeds_np.tolist()
@@ -207,22 +246,22 @@ class Environment(ABC):
         else:
             states = self.generate_start_states(num_trajs)
 
-        states_walk: List[State] = [state for state in states]
+        states_walk: list[State] = list(states)
 
         # Num steps
-        num_steps: np.array = np.array(num_steps_l)
-        num_moves_curr: np.array = np.zeros(len(states))
+        num_steps: NDArray[float32] = np.array(num_steps_l, dtype=float32)
+        num_moves_curr: NDArray[float32] = np.zeros(len(states), dtype=float32)
 
-        # random walk
-        trajs: List[List[State]] = [[state] for state in states]
-        action_trajs: List[List[int]] = [[] for _ in range(len(states))]
+        # Random walk
+        trajs: list[list[State]] = [[state] for state in states]
+        action_trajs: list[list[int]] = [[] for _ in range(len(states))]
 
         moves_lt = num_moves_curr < num_steps
         while np.any(moves_lt):
-            idxs: np.ndarray = np.where(moves_lt)[0]
+            idxs: NDArray[intp] = np.where(moves_lt)[0]
             states_to_move = [states_walk[idx] for idx in idxs]
 
-            actions: List[int] = self.rand_action(states_to_move)
+            actions: list[int] = self.rand_action(states_to_move)
             states_moved, _ = self.next_state(states_to_move, actions)
 
             for move_idx, idx in enumerate(idxs):
@@ -230,12 +269,12 @@ class Environment(ABC):
                 action_trajs[idx].append(actions[move_idx])
                 states_walk[idx] = states_moved[move_idx]
 
-            num_moves_curr[idxs] = num_moves_curr[idxs] + 1
+            num_moves_curr[idxs] += 1
 
             moves_lt[idxs] = num_moves_curr[idxs] < num_steps[idxs]
 
-        # get state goal pairs
-        states_start: List[State] = [traj[0] for traj in trajs]
-        states_goal: List[State] = [traj[-1] for traj in trajs]
+        # Get state goal pairs
+        states_start: list[State] = [traj[0] for traj in trajs]
+        states_goal: list[State] = [traj[-1] for traj in trajs]
 
         return states_start, states_goal, trajs, action_trajs

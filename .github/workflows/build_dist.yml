@@ -1,0 +1,120 @@
+name: Build Dist (Pixi + Hatch)
+
+on:
+  workflow_call:
+    inputs:
+      pixi-environment:
+        description: >-
+          Environments to build. Accepts:
+            * A JSON array string: ["build","cuda"] (preferred)
+            * A comma or newline separated list: build,cuda  OR  build\n cuda
+            * A single name: build
+          Will be normalized to a JSON array.
+        required: false
+        type: string
+        default: build
+    outputs:
+      artifact_names:
+        description: "JSON array of produced artifact names (dist-<env>)"
+        value: ${{ jobs.define-matrix.outputs.artifact_names }}
+        # Exposed directly from define-matrix job
+
+permissions:
+  contents: read
+
+jobs:
+  define-matrix:
+    name: Define build matrix
+    runs-on: ubuntu-latest
+    outputs:
+      environments: ${{ steps.matrix.outputs.environments }}
+      artifact_names: ${{ steps.matrix.outputs.artifact_names }}
+    steps:
+      - name: Normalize environments input -> JSON array
+        id: matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          raw='${{ inputs.pixi-environment }}'
+          if [ -z "${raw}" ]; then
+            raw="build"
+          fi
+          # Detect JSON array (starts with [ and ends with ])
+          if [[ ${raw} =~ ^\[.*\]$ ]]; then
+            envs_json="${raw}"
+          else
+            # Replace newlines with commas, then split on commas
+            cleaned=$(echo "${raw}" | tr '\n' ',' )
+            # Remove duplicate commas/spaces
+            cleaned=$(echo "${cleaned}" | sed 's/,\{1,\}/,/g')
+            IFS=',' read -ra PARTS <<< "${cleaned}"
+            envs_json="["
+            first=1
+            for p in "${PARTS[@]}"; do
+              name=$(echo "$p" | xargs)
+              [ -z "$name" ] && continue
+              if [ $first -eq 0 ]; then envs_json+=","; fi
+              envs_json+="\"$name\""
+              first=0
+            done
+            envs_json+="]"
+          fi
+          # Derive artifact names: dist-<env>
+          # Build artifact names JSON without external deps
+          artifacts_json="["
+          sep=""
+          for e in $(echo "$envs_json" | sed -E 's/^\[|\]$//g' | tr ',' '\n'); do
+            e=$(echo "$e" | sed -E 's/^"|"$//g' | xargs)
+            [ -z "$e" ] && continue
+            artifacts_json+="${sep}\"dist-$e\""
+            sep=",";
+          done
+          artifacts_json+="]"
+          echo "environments=${envs_json}" >> "$GITHUB_OUTPUT"
+          echo "artifact_names=${artifacts_json}" >> "$GITHUB_OUTPUT"
+          echo "Matrix environments: ${envs_json}"
+          echo "Artifacts: ${artifacts_json}"
+
+  build:
+    name: Build dists (matrix)
+    runs-on: ubuntu-latest
+    needs: define-matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        pixi-env: ${{ fromJson(needs.define-matrix.outputs.environments) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Pixi
+        uses: prefix-dev/setup-pixi@v0.9.0
+        with:
+          environments: ${{ matrix.pixi-env }}
+          cache: false
+          locked: true
+
+      - name: Build (hatch via pixi task)
+        run: |
+          set -eo pipefail
+          pixi update
+          pixi install -e ${{ matrix.pixi-env }}
+          pixi run -e ${{ matrix.pixi-env }} buildpy-clean
+
+      - name: Verify dist artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          sdists=(dist/*.tar.gz)
+          (( ${#wheels[@]} > 0 )) || { echo "No wheels found in dist/"; exit 1; }
+          (( ${#sdists[@]} > 0 )) || { echo "No sdists found in dist/"; exit 1; }
+          ls -l dist
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.pixi-env }}
+          path: dist/*
+          if-no-files-found: error

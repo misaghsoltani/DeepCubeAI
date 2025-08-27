@@ -1,13 +1,20 @@
+from __future__ import annotations
+
+from argparse import ArgumentParser, Namespace
+from dataclasses import dataclass
+import json
 import os
+from pathlib import Path
 import pickle
+from random import randint
 import sys
 import time
-from argparse import ArgumentParser, Namespace
-from random import randint
-from typing import Dict, List, Tuple
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy import float32
+from numpy.typing import NDArray
 import torch
 from torch import nn
 
@@ -37,25 +44,25 @@ def generate_file_name(save_dir: str, prefix: str) -> str:
     return f"{prefix}{suffix}"
 
 
-def calculate_statistics(se_cont_l: List[List[float]], se_disc_l: List[List[float]]) -> str:
+def calculate_statistics(se_cont_l: list[list[float]], se_disc_l: list[list[float]]) -> str:
     """Calculates and returns statistical information for continuous and discrete errors.
 
     Args:
-        se_cont_l (List[List[float]]): List of squared errors for the continuous model.
-        se_disc_l (List[List[float]]): List of squared errors for the discrete model.
+        se_cont_l (list[list[float]]): List of squared errors for the continuous model.
+        se_disc_l (list[list[float]]): List of squared errors for the discrete model.
 
     Returns:
         str: A formatted string containing statistical information.
     """
 
-    def calculate_metrics(se: np.ndarray) -> Dict[str, float]:
+    def calculate_metrics(se: NDArray[float32]) -> dict[str, float32]:
         """Calculates various statistical metrics for the given squared errors.
 
         Args:
-            se (np.ndarray): Array of squared errors.
+            se (np.NDArray): Array of squared errors.
 
         Returns:
-            Dict[str, float]: Dictionary containing statistical metrics.
+            dict[str, float]: Dictionary containing statistical metrics.
         """
         return {
             "mean": np.mean(se),
@@ -76,32 +83,55 @@ def calculate_statistics(se_cont_l: List[List[float]], se_disc_l: List[List[floa
     cont_metrics = calculate_metrics(se_cont)
     disc_metrics = calculate_metrics(se_disc)
 
-    info = (f"\nDiscrete Model:\n"
-            f"-----\n"
-            f"Overall Mean: {disc_metrics['mean']:.3e}\n"
-            f"Overall Min: {disc_metrics['min']:.3e}\n"
-            f"Overall Max: {disc_metrics['max']:.3e}\n"
-            f"Std Dev: {disc_metrics['std']:.3e}\n"
-            f"Variance: {disc_metrics['var']:.3e}\n"
-            f"Median: {disc_metrics['median']:.3e}\n"
-            f"Q1: {disc_metrics['q1']:.3e}\n"
-            f"Q3: {disc_metrics['q3']:.3e}\n"
-            f"IQR: {disc_metrics['iqr']:.3e}\n"
-            f"Range: {disc_metrics['range']:.3e}\n"
-            f"\nContinuous Model:\n"
-            f"-----\n"
-            f"Overall Mean: {cont_metrics['mean']:.3e}\n"
-            f"Overall Min: {cont_metrics['min']:.3e}\n"
-            f"Overall Max: {cont_metrics['max']:.3e}\n"
-            f"Std Dev: {cont_metrics['std']:.3e}\n"
-            f"Variance: {cont_metrics['var']:.3e}\n"
-            f"Median: {cont_metrics['median']:.3e}\n"
-            f"Q1: {cont_metrics['q1']:.3e}\n"
-            f"Q3: {cont_metrics['q3']:.3e}\n"
-            f"IQR: {cont_metrics['iqr']:.3e}\n"
-            f"Range: {cont_metrics['range']:.3e}\n")
+    info = (
+        f"\nDiscrete Model:\n"
+        f"-----\n"
+        f"Overall Mean: {disc_metrics['mean']:.3e}\n"
+        f"Overall Min: {disc_metrics['min']:.3e}\n"
+        f"Overall Max: {disc_metrics['max']:.3e}\n"
+        f"Std Dev: {disc_metrics['std']:.3e}\n"
+        f"Variance: {disc_metrics['var']:.3e}\n"
+        f"Median: {disc_metrics['median']:.3e}\n"
+        f"Q1: {disc_metrics['q1']:.3e}\n"
+        f"Q3: {disc_metrics['q3']:.3e}\n"
+        f"IQR: {disc_metrics['iqr']:.3e}\n"
+        f"Range: {disc_metrics['range']:.3e}\n"
+        f"\nContinuous Model:\n"
+        f"-----\n"
+        f"Overall Mean: {cont_metrics['mean']:.3e}\n"
+        f"Overall Min: {cont_metrics['min']:.3e}\n"
+        f"Overall Max: {cont_metrics['max']:.3e}\n"
+        f"Std Dev: {cont_metrics['std']:.3e}\n"
+        f"Variance: {cont_metrics['var']:.3e}\n"
+        f"Median: {cont_metrics['median']:.3e}\n"
+        f"Q1: {cont_metrics['q1']:.3e}\n"
+        f"Q3: {cont_metrics['q3']:.3e}\n"
+        f"IQR: {cont_metrics['iqr']:.3e}\n"
+        f"Range: {cont_metrics['range']:.3e}\n"
+    )
 
     return info
+
+
+@dataclass(frozen=True, slots=True)
+class PlotDiscVsContConfig:
+    """Config for plotting discrete vs continuous model errors."""
+
+    env: str
+    model_test_data: str
+    env_model_dir_disc: str
+    env_model_dir_cont: str
+    num_episodes: int = -1
+    num_steps: int = -1
+    print_interval: int = 1
+    save_dir: str | None = None
+    save_pdf: bool = True
+
+    @staticmethod
+    def from_json(path: str) -> PlotDiscVsContConfig:
+        """Load config from JSON, ignoring unknown keys."""
+        raw: dict[str, Any] = json.loads(Path(path).read_bytes())
+        return PlotDiscVsContConfig(**raw)
 
 
 def parse_arguments() -> Namespace:
@@ -113,36 +143,24 @@ def parse_arguments() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("--env", type=str, required=True, help="Environment")
     parser.add_argument("--model_test_data", type=str, required=True, help="Location of data")
-    parser.add_argument("--env_model_dir_disc",
-                        type=str,
-                        required=True,
-                        help="Directory of environment model")
-    parser.add_argument("--env_model_dir_cont",
-                        type=str,
-                        required=True,
-                        help="Directory of environment model")
-    parser.add_argument("--num_episodes",
-                        type=int,
-                        default=-1,
-                        help="Number of episodes to be used")
+    parser.add_argument("--env_model_dir_disc", type=str, required=True, help="Directory of environment model")
+    parser.add_argument("--env_model_dir_cont", type=str, required=True, help="Directory of environment model")
+    parser.add_argument("--num_episodes", type=int, default=-1, help="Number of episodes to be used")
     parser.add_argument("--num_steps", type=int, default=-1, help="Number of steps to be used")
-    parser.add_argument("--print_interval",
-                        type=int,
-                        default=1,
-                        help="The interval of printing the info")
+    parser.add_argument("--print_interval", type=int, default=1, help="The interval of printing the info")
     parser.add_argument("--save_dir", type=str, default=None, help="Directory to save the image")
     parser.add_argument("--save_pdf", action="store_true", default=True, help="Save plot as PDF")
     return parser.parse_args()
 
 
-def load_data(model_test_data: str) -> Tuple[List[np.ndarray], List[List[int]]]:
+def load_data(model_test_data: str) -> tuple[list[NDArray[float32]], list[list[int]]]:
     """Loads test data from a specified file.
 
     Args:
         model_test_data (str): Path to the test data file.
 
     Returns:
-        Tuple[List[np.ndarray], List[List[int]]]: Loaded state and action episodes.
+        tuple[list[NDArray], list[list[int]]]: Loaded state and action episodes.
     """
     print("Loading data...")
     start_time = time.time()
@@ -152,15 +170,14 @@ def load_data(model_test_data: str) -> Tuple[List[np.ndarray], List[List[int]]]:
     return state_episodes, action_episodes
 
 
-def setup_environment(
-        args: Namespace) -> Tuple[Environment, List[np.ndarray], List[List[int]], int, int, int]:
+def setup_environment(args: Namespace) -> tuple[Environment, list[NDArray[float32]], list[list[int]], int, int, int]:
     """Sets up the environment and loads the state and action episodes.
 
     Args:
         args (Namespace): Parsed command-line arguments.
 
     Returns:
-        Tuple[Environment, List[np.ndarray], List[List[int]], int, int, int]: Environment,
+        tuple[Environment, list[NDArray], list[list[int]], int, int, int]: Environment,
             state episodes, action episodes, number of state episodes, number of steps, and
             starting episode index.
     """
@@ -172,27 +189,24 @@ def setup_environment(
     start_ep = 0
     if num_eps < num_state_episodes:
         start_ep = randint(0, num_state_episodes - num_eps - 1)
-        state_episodes = state_episodes[start_ep:start_ep + num_eps]
-        action_episodes = action_episodes[start_ep:start_ep + num_eps]
+        state_episodes = state_episodes[start_ep : start_ep + num_eps]
+        action_episodes = action_episodes[start_ep : start_ep + num_eps]
         num_state_episodes = len(state_episodes)
 
     # number of steps
     len_steps = len(action_episodes[0])  # TODO assuming all episodes the same len
-    num_steps = (args.num_steps if
-                 (args.num_steps > 0 and args.num_steps < len_steps) else len_steps)
+    num_steps = args.num_steps if (args.num_steps > 0 and args.num_steps < len_steps) else len_steps
 
     if num_steps < len_steps:
-        state_episodes = [x[0:num_steps + 1] for x in state_episodes]
+        state_episodes = [x[0 : num_steps + 1] for x in state_episodes]
         action_episodes = [x[0:num_steps] for x in action_episodes]
 
     return env, state_episodes, action_episodes, num_state_episodes, num_steps, start_ep
 
 
-def setup_save_paths(save_dir: str,
-                     env_name: str,
-                     num_state_episodes: int,
-                     num_steps: int,
-                     save_pdf: bool = False) -> Tuple[str, str, str]:
+def setup_save_paths(
+    save_dir: str, env_name: str, num_state_episodes: int, num_steps: int, save_pdf: bool = False
+) -> tuple[str, str, str]:
     """Sets up the save paths for plots and information.
 
     Args:
@@ -203,7 +217,7 @@ def setup_save_paths(save_dir: str,
         save_pdf (bool, optional): Whether to save the plot as a PDF. Defaults to False.
 
     Returns:
-        Tuple[str, str, str]: Save directory, plot save path, and text save path.
+        tuple[str, str, str]: Save directory, plot save path, and text save path.
     """
     save_dir = os.getcwd() if save_dir is None else save_dir
     save_dir = os.path.join(save_dir, "plots")
@@ -221,8 +235,10 @@ def setup_save_paths(save_dir: str,
     return save_dir, plot_save_path, txt_save_path
 
 
-def load_models(env: Environment, args: Namespace,
-                device: torch.device) -> Tuple[nn.Module, nn.Module, nn.Module, nn.Module]:
+@torch.inference_mode()
+def load_models(
+    env: Environment, args: Namespace, device: torch.device
+) -> tuple[nn.Module, nn.Module, nn.Module, nn.Module]:
     """Loads the neural network models for the environment.
 
     Args:
@@ -231,7 +247,7 @@ def load_models(env: Environment, args: Namespace,
         device (torch.device): The device to load the models onto.
 
     Returns:
-        Tuple[nn.Module, nn.Module, nn.Module, nn.Module]: Encoder model, environment model,
+        tuple[nn.Module, nn.Module, nn.Module, nn.Module]: Encoder model, environment model,
             decoder model, and continuous environment model.
     """
     enc_file = f"{args.env_model_dir_disc}/encoder_state_dict.pt"
@@ -252,13 +268,14 @@ def load_models(env: Environment, args: Namespace,
     return enc_model, env_model, dec_model, env_model_cont
 
 
-def plot_results(se_disc_l: List[List[float]], se_cont_l: List[List[float]], num_steps: int,
-                 plot_save_path: str) -> None:
+def plot_results(
+    se_disc_l: list[list[float]], se_cont_l: list[list[float]], num_steps: int, plot_save_path: str
+) -> None:
     """Plots the results of the discrete and continuous models.
 
     Args:
-        se_disc_l (List[List[float]]): List of squared errors for the discrete model.
-        se_cont_l (List[List[float]]): List of squared errors for the continuous model.
+        se_disc_l (list[list[float]]): List of squared errors for the discrete model.
+        se_cont_l (list[list[float]]): List of squared errors for the continuous model.
         num_steps (int): Number of steps.
         plot_save_path (str): Path to save the plot.
     """
@@ -275,31 +292,40 @@ def plot_results(se_disc_l: List[List[float]], se_cont_l: List[List[float]], num
     plt.show(block=True)
 
 
-def main():
-    """Main function to run the model testing and plotting."""
-    args = parse_arguments()
-    env, state_episodes, action_episodes, num_state_episodes, num_steps, start_ep = (
-        setup_environment(args))
-    _, plot_save_path, txt_save_path = setup_save_paths(args.save_dir, args.env,
-                                                        num_state_episodes, num_steps,
-                                                        args.save_pdf)
+@torch.inference_mode()
+def _run_with_args(args: Namespace) -> None:
+    """Run plotting pipeline using an argparse Namespace."""
+    env, state_episodes, action_episodes, num_state_episodes, num_steps, start_ep = setup_environment(args)
+    _, plot_save_path, txt_save_path = setup_save_paths(
+        args.save_dir, args.env, num_state_episodes, num_steps, args.save_pdf
+    )
 
-    sys.stdout = data_utils.Logger(txt_save_path, "a")
+    if not isinstance(sys.stdout, data_utils.Logger):
+        sys.stdout = data_utils.Logger(txt_save_path, "a")
     print_args(args)
-    print(f"Episodes {start_ep}-{start_ep + num_state_episodes} ({num_state_episodes} episodes, "
-          f"{num_steps} steps)")
+    print(f"Episodes {start_ep}-{start_ep + num_state_episodes} ({num_state_episodes} episodes, {num_steps} steps)")
 
     start_idxs = np.zeros(num_state_episodes, dtype=int)
     device, _, _ = nnet_utils.get_device()
     enc_model, env_model, dec_model, env_model_cont = load_models(env, args, device)
 
     print("\nTesting the discrete model:")
-    se_disc_l = step_model_disc(enc_model, env_model, dec_model, state_episodes, action_episodes,
-                                start_idxs, device, num_steps, args.print_interval)
+    se_disc_l = step_model_disc(
+        enc_model,
+        env_model,
+        dec_model,
+        state_episodes,
+        action_episodes,
+        start_idxs,
+        device,
+        num_steps,
+        args.print_interval,
+    )
 
     print("\nTesting the continuous model:")
-    se_cont_l = step_model_cont(env_model_cont, state_episodes, action_episodes, start_idxs,
-                                device, num_steps, args.print_interval)
+    se_cont_l = step_model_cont(
+        env_model_cont, state_episodes, action_episodes, start_idxs, device, num_steps, args.print_interval
+    )
 
     result_info = calculate_statistics(se_cont_l, se_disc_l)
     print(result_info)
@@ -307,6 +333,29 @@ def main():
     plot_results(se_disc_l, se_cont_l, num_steps, plot_save_path)
     print(f"Plot saved to '{os.path.abspath(plot_save_path)}'")
     print(f"Information saved to '{os.path.abspath(txt_save_path)}'")
+
+
+@torch.inference_mode()
+def run_plot_disc_vs_cont(cfg: PlotDiscVsContConfig) -> None:
+    """Programmatic entrypoint using a typed config."""
+    ns = Namespace(
+        env=cfg.env,
+        model_test_data=cfg.model_test_data,
+        env_model_dir_disc=cfg.env_model_dir_disc,
+        env_model_dir_cont=cfg.env_model_dir_cont,
+        num_episodes=cfg.num_episodes,
+        num_steps=cfg.num_steps,
+        print_interval=cfg.print_interval,
+        save_dir=cfg.save_dir,
+        save_pdf=cfg.save_pdf,
+    )
+    _run_with_args(ns)
+
+
+def main() -> None:
+    """Main function to run the model testing and plotting."""
+    args = parse_arguments()
+    _run_with_args(args)
 
 
 if __name__ == "__main__":

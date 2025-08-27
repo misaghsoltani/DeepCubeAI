@@ -1,0 +1,73 @@
+{
+  "include": ["deepcubeai/*"],
+
+  "exclude": ["**/__pycache__/**", "**/.shared_inductor_cache/**"],
+
+  // "ignore": ["tests"],
+
+  "defineConstant": {
+    "DEBUG": true
+  },
+
+  //   "stubPath": "deepcubeai/stubs",
+
+  "reportMissingImports": "error",
+  "reportMissingTypeStubs": false,
+  "typeCheckingMode": "basic",
+  "reportDeprecated": "warning",
+  "reportAssignmentType": "error",
+  "reportUnusedVariable": "warning",
+  "reportUnusedFunction": "warning",
+  "reportAssertAlwaysTrue": "warning",
+  "reportGeneralTypeIssues": "error",
+  "reportImportCycles": "warning",
+  "reportUnreachable": "warning",
+  "reportRedeclaration": "error",
+  "reportAttributeAccessIssue": "error",
+  "reportInconsistentConstructor": "warning",
+  "reportConstantRedefinition": "warning",
+  "reportIndexIssue": "error",
+  "reportMissingTypeArgument": "warning",
+  "reportUndefinedVariable": "error",
+  "reportUnusedImport": "warning",
+  "enableReachabilityAnalysis": true,
+  "deprecateTypingAliases": true,
+
+  //   "pythonPlatform": "Linux",
+
+  "executionEnvironments": [
+    {
+      "root": "deepcubeai",
+      "pythonVersion": "3.10",
+      //   "pythonPlatform": "Linux",
+      "extraPaths": [
+        "${workspaceFolder}/.pixi/envs/all/lib/python3.10/site-packages",
+        "${workspaceFolder}/.pixi/envs/lib/python3.10/site-packages",
+        "${workspaceFolder}/deepcubeai"
+      ],
+      "reportMissingImports": "error"
+    },
+    {
+      "root": "deepcubeai",
+      "pythonVersion": "3.11",
+      //   "pythonPlatform": "Linux",
+      "extraPaths": [
+        "${workspaceFolder}/.pixi/envs/all/lib/python3.11/site-packages",
+        "${workspaceFolder}/.pixi/envs/lib/python3.11/site-packages",
+        "${workspaceFolder}/deepcubeai"
+      ],
+      "reportMissingImports": "error"
+    },
+    {
+      "root": "deepcubeai",
+      "pythonVersion": "3.12",
+      //   "pythonPlatform": "Linux",
+      "extraPaths": [
+        "${workspaceFolder}/.pixi/envs/all/lib/python3.12/site-packages",
+        "${workspaceFolder}/.pixi/envs/lib/python3.12/site-packages",
+        "${workspaceFolder}/deepcubeai"
+      ],
+      "reportMissingImports": "error"
+    }
+  ]
+}

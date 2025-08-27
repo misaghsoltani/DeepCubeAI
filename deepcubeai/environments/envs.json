@@ -1,0 +1,27 @@
+{
+  "cube3": {
+    "type": "builtin",
+    "module": "deepcubeai.environments.cube3",
+    "attr": "Cube3"
+  },
+  "cube3_triples": {
+    "type": "builtin",
+    "module": "deepcubeai.environments.cube3",
+    "attr": "Cube3Triples"
+  },
+  "digitjump": {
+    "type": "builtin",
+    "module": "deepcubeai.environments.digit_jump",
+    "attr": "DigitJumpEnvironment"
+  },
+  "iceslider": {
+    "type": "builtin",
+    "module": "deepcubeai.environments.ice_slider",
+    "attr": "IceSliderEnvironment"
+  },
+  "sokoban": {
+    "type": "builtin",
+    "module": "deepcubeai.environments.sokoban",
+    "attr": "Sokoban"
+  }
+}

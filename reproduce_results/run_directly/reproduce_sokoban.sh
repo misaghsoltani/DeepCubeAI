@@ -1,50 +1,26 @@
-# DCAI_DIR is set to the parent directory of the folder containing this script.
-# For example, if this script is in /path/to/deepcubeai/reproduce_results/, DCAI_DIR will be /path/to/
-DCAI_DIR=$(dirname "$(dirname "$(realpath "$0")")")
-cd $DCAI_DIR
+#!/usr/bin/env bash
+
+set -euo pipefail
+# Script path is .../DeepCubeAI/reproduce_results/run_directly/reproduce_sokoban.sh
+# Go up three levels to reach .../DeepCubeAI
+DCAI_DIR=$(dirname "$(dirname "$(dirname "$(realpath "$0")")")")
+cd ..
+cd "$DCAI_DIR" || exit 1
+echo "Working directory: $(pwd)"
 
 run_pipeline() {
-
-    local CMD=$1
-
+    local CMD="$1"
     echo "Running command:"
+    # Use shell parameter expansion instead of sed (SC2001)
+    local PRETTY_CMD="${CMD// --/$'\n--'}"
     while IFS= read -r line; do
         echo "$line"
-    done <<<"$(echo "$CMD" | sed 's/ --/\n--/g')"
+    done <<< "$PRETTY_CMD"
     echo ""
-
     echo "------------------------------------------------------------------------"
     echo "------------------------------------------------------------------------"
     echo "------------------------------------------------------------------------"
-
-    # Capture start time
-    START_TIME=$(($(date +%s)*1000 + $(date +%N)/1000000))
-
-    # Run the pipeline script
     $CMD
-
-    # Capture end time
-    END_TIME=$(($(date +%s)*1000 + $(date +%N)/1000000))
-
-    # Calculate execution time in milliseconds
-    ELAPSED_TIME=$((END_TIME - START_TIME))
-
-    # Convert milliseconds to days, hours, minutes, seconds, and milliseconds
-    DAYS=$((ELAPSED_TIME / 86400000))
-    ELAPSED_TIME=$((ELAPSED_TIME % 86400000))
-
-    HOURS=$((ELAPSED_TIME / 3600000))
-    ELAPSED_TIME=$((ELAPSED_TIME % 3600000))
-
-    MINUTES=$((ELAPSED_TIME / 60000))
-    ELAPSED_TIME=$((ELAPSED_TIME % 60000))
-
-    SECONDS=$((ELAPSED_TIME / 1000))
-    MILLISECONDS=$((ELAPSED_TIME % 1000))
-
-    echo "------------------------------------------------------------------------"
-    echo "------------------------------------------------------------------------"
-    echo "Elapsed Time for this stage (D:H:M:S:MS): $DAYS:$HOURS:$MINUTES:$SECONDS:$MILLISECONDS"
     echo "------------------------------------------------------------------------"
     echo "------------------------------------------------------------------------"
     echo "------------------------------------------------------------------------"
@@ -65,137 +41,147 @@ DATA_FILE_NAME_MODEL_TEST_PLOT=0.1k_stp10k
 QSTAR_WEIGHT=0.8
 QSTAR_H_WEIGHT=1.0
 QSTAR_BATCH_SIZE=100
-UCS_BATCH_SIZE=100
-current_time=$(date +"%Y%m%d_%H%M%S")$(($(date +%N | bc)/1000000))
+# UCS_BATCH_SIZE=100
+current_time=$(date +"%Y%m%d_%H%M%S")
 RESULTS_DIR_QSTAR="model=${ENV_MODEL_NAME_DISC}__heur=${HEUR_NNET_NAME}__QSTAR_results/path_cost_weight=${QSTAR_WEIGHT}__h_weight=${QSTAR_H_WEIGHT}__batchsize=${QSTAR_BATCH_SIZE}_${current_time}"
-RESULTS_DIR_UCS="model=${ENV_MODEL_NAME_DISC}__UCS_results/batchsize=${UCS_BATCH_SIZE}_${current_time}"
+# RESULTS_DIR_UCS="model=${ENV_MODEL_NAME_DISC}__UCS_results/batchsize=${UCS_BATCH_SIZE}_${current_time}"
 RESULTS_DIR_GBFS="model=${ENV_MODEL_NAME_DISC}__heur=${HEUR_NNET_NAME}__GBFS_results/${current_time}"
 PER_EQ_TOL=100
 PLOTS_SAVE_DIR="${DCAI_DIR}/deepcubeai/"
 # Get the number of CPU cores available on the system
-NUM_CORES=$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || wmic cpu get NumberOfCores 2>/dev/null)
+# Resolve the directory of this script, then source the sibling file.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+# shellcheck source=get_cpu_num.sh
+. "$SCRIPT_DIR/get_cpu_num.sh"
 
-CMD_TRAIN_VAL="bash deepcubeai.sh --stage gen_offline \
-                                  --env $ENV \
-                                  --data_dir $DATA_DIR \
-                                  --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                  --num_offline_steps 30 \
-                                  --num_train_eps 9000 \
-                                  --num_val_eps 1000 \
-                                  --num_cpus $NUM_CORES"
+CORES="$(get_allocated_cpus)"
+if (( CORES > 1 )); then
+  NUM_CORES=$((CORES - 1))
+else
+  NUM_CORES=1
+fi
 
-CMD_ENV_MODEL_TEST="bash deepcubeai.sh --stage gen_env_test \
-                                       --env $ENV \
-                                       --data_dir $DATA_DIR \
-                                       --data_file_name $DATA_FILE_NAME_MODEL_TEST \
-                                       --num_offline_steps 1000 \
-                                       --num_test_eps 100 \
-                                       --num_cpus $NUM_CORES"
+CMD_TRAIN_VAL="python -m deepcubeai gen_offline \
+                                    --env $ENV \
+                                    --data_dir $DATA_DIR \
+                                    --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
+                                    --num_offline_steps 30 \
+                                    --num_train_eps 9000 \
+                                    --num_val_eps 1000 \
+                                    --num_cpus $NUM_CORES"
 
-CMD_TRAIN_ENV_DISC="bash deepcubeai.sh --stage train_model \
-                                       --env $ENV \
-                                       --data_dir $DATA_DIR \
-                                       --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                       --env_batch_size 100 \
-                                       --env_model_name $ENV_MODEL_NAME_DISC"
+CMD_ENV_MODEL_TEST="python -m deepcubeai gen_env_test \
+                                         --env $ENV \
+                                         --data_dir $DATA_DIR \
+                                         --data_file_name $DATA_FILE_NAME_MODEL_TEST \
+                                         --num_offline_steps 1000 \
+                                         --num_test_eps 100 \
+                                         --num_cpus $NUM_CORES"
 
-CMD_TEST_ENV_DISC="bash deepcubeai.sh --stage test_model \
-                                      --env $ENV \
-                                      --data_dir $DATA_DIR \
-                                      --data_file_name $DATA_FILE_NAME_MODEL_TEST \
-                                      --env_model_name $ENV_MODEL_NAME_DISC \
-                                      --print_interval 50"
+CMD_TRAIN_ENV_DISC="python -m deepcubeai train_model_disc \
+                                         --env $ENV \
+                                         --data_dir $DATA_DIR \
+                                         --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
+                                         --env_batch_size 100 \
+                                         --env_model_name $ENV_MODEL_NAME_DISC"
 
-CMD_TRAIN_ENV_CONT="bash deepcubeai.sh --stage train_model_cont \
-                                       --env $ENV \
-                                       --data_dir $DATA_DIR \
-                                       --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                       --env_batch_size 100 \
-                                       --env_model_name $ENV_MODEL_NAME_CONT"
+CMD_TEST_ENV_DISC="python -m deepcubeai test_model \
+                                        --env $ENV \
+                                        --data_dir $DATA_DIR \
+                                        --data_file_name $DATA_FILE_NAME_MODEL_TEST \
+                                        --env_model_name $ENV_MODEL_NAME_DISC \
+                                        --print_interval 50"
 
-CMD_TEST_ENV_CONT="bash deepcubeai.sh --stage test_model_cont \
-                                      --env $ENV \
-                                      --data_dir $DATA_DIR \
-                                      --data_file_name $DATA_FILE_NAME_MODEL_TEST \
-                                      --env_model_name $ENV_MODEL_NAME_CONT \
-                                      --print_interval 50"
+CMD_TRAIN_ENV_CONT="python -m deepcubeai train_model_cont \
+                                         --env $ENV \
+                                         --data_dir $DATA_DIR \
+                                         --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
+                                         --env_batch_size 100 \
+                                         --env_model_name $ENV_MODEL_NAME_CONT"
 
-CMD_ENCODE_OFFLINE="bash deepcubeai.sh --stage encode_offline \
-                                       --env $ENV \
-                                       --data_dir $DATA_DIR \
-                                       --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                       --env_model_name $ENV_MODEL_NAME_DISC"
+CMD_TEST_ENV_CONT="python -m deepcubeai test_model_cont \
+                                        --env $ENV \
+                                        --data_dir $DATA_DIR \
+                                        --data_file_name $DATA_FILE_NAME_MODEL_TEST \
+                                        --env_model_name $ENV_MODEL_NAME_CONT \
+                                        --print_interval 50"
 
-CMD_TRAIN_HEUR="bash deepcubeai.sh --stage train_heur \
+CMD_ENCODE_OFFLINE="python -m deepcubeai encode_offline \
+                                         --env $ENV \
+                                         --data_dir $DATA_DIR \
+                                         --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
+                                         --env_model_name $ENV_MODEL_NAME_DISC"
+
+CMD_TRAIN_HEUR="python -m deepcubeai train_heur \
+                                     --env $ENV \
+                                     --data_dir $DATA_DIR \
+                                     --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
+                                     --env_model_name $ENV_MODEL_NAME_DISC \
+                                     --heur_nnet_name $HEUR_NNET_NAME \
+                                     --per_eq_tol $PER_EQ_TOL \
+                                     --heur_batch_size 10_000 \
+                                     --states_per_update 50_000_000 \
+                                     --start_steps 30 \
+                                     --goal_steps 30 \
+                                     --max_solve_steps 30"
+
+CMD_QSTAR="python -m deepcubeai qstar \
+                                --env $ENV \
+                                --env_model_name $ENV_MODEL_NAME_DISC \
+                                --heur_nnet_name $HEUR_NNET_NAME \
+                                --qstar_batch_size $QSTAR_BATCH_SIZE \
+                                --qstar_weight $QSTAR_WEIGHT \
+                                --qstar_h_weight $QSTAR_H_WEIGHT \
+                                --per_eq_tol $PER_EQ_TOL \
+                                --qstar_results_dir $RESULTS_DIR_QSTAR \
+                                --search_test_data $SEARCH_TEST_DATA \
+                                --no_save_imgs"
+
+CMD_GBFS="python -m deepcubeai gbfs \
+                               --env $ENV \
+                               --env_model_name $ENV_MODEL_NAME_DISC \
+                               --heur_nnet_name $HEUR_NNET_NAME \
+                               --per_eq_tol $PER_EQ_TOL \
+                               --gbfs_results_dir $RESULTS_DIR_GBFS \
+                               --search_test_data $SEARCH_TEST_DATA \
+                               --search_itrs 100"
+
+CMD_VIZ_DATA="python -m deepcubeai visualize_data \
                                    --env $ENV \
                                    --data_dir $DATA_DIR \
                                    --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                   --env_model_name $ENV_MODEL_NAME_DISC \
-                                   --heur_nnet_name $HEUR_NNET_NAME \
-                                   --per_eq_tol $PER_EQ_TOL \
-                                   --heur_batch_size 10_000 \
-                                   --states_per_update 50_000_000 \
-                                   --start_steps 30 \
-                                   --goal_steps 30 \
-                                   --max_solve_steps 30"
+                                   --num_train_trajs_viz 8 \
+                                   --num_train_steps_viz 2 \
+                                   --num_val_trajs_viz 8 \
+                                   --num_val_steps_viz 2"
 
-CMD_QSTAR="bash deepcubeai.sh --stage qstar \
-                              --env $ENV \
-                              --env_model_name $ENV_MODEL_NAME_DISC \
-                              --heur_nnet_name $HEUR_NNET_NAME \
-                              --qstar_batch_size $QSTAR_BATCH_SIZE \
-                              --qstar_weight $QSTAR_WEIGHT \
-                              --qstar_h_weight $QSTAR_H_WEIGHT \
-                              --per_eq_tol $PER_EQ_TOL \
-                              --qstar_results_dir $RESULTS_DIR_QSTAR \
-                              --search_test_data $SEARCH_TEST_DATA \
-                              --save_imgs false"
+CMD_ENV_MODEL_TEST_PLOT="python -m deepcubeai gen_env_test \
+                                              --env $ENV \
+                                              --data_dir $DATA_DIR \
+                                              --data_file_name $DATA_FILE_NAME_MODEL_TEST_PLOT \
+                                              --num_offline_steps 10_000 \
+                                              --num_test_eps 100 \
+                                              --num_cpus $NUM_CORES"
 
-CMD_UCS="bash deepcubeai.sh --stage ucs \
-                            --env $ENV \
-                            --env_model_name $ENV_MODEL_NAME_DISC \
-                            --ucs_batch_size $UCS_BATCH_SIZE \
-                            --per_eq_tol $PER_EQ_TOL \
-                            --ucs_results_dir $RESULTS_DIR_UCS \
-                            --search_test_data $SEARCH_TEST_DATA \
-                            --save_imgs true"
+CMD_DISC_VS_CONT="python -m deepcubeai disc_vs_cont \
+                                       --env $ENV \
+                                       --data_dir $DATA_DIR \
+                                       --data_file_name $DATA_FILE_NAME_MODEL_TEST_PLOT \
+                                       --env_model_dir_disc $ENV_MODEL_DIR_DISC \
+                                       --env_model_dir_cont $ENV_MODEL_DIR_CONT \
+                                       --save_dir $PLOTS_SAVE_DIR \
+                                       --num_steps 10_000 \
+                                       --num_episodes 100 \
+                                       --print_interval 500"
 
-CMD_GBFS="bash deepcubeai.sh --stage gbfs \
-                             --env $ENV \
-                             --env_model_name $ENV_MODEL_NAME_DISC \
-                             --heur_nnet_name $HEUR_NNET_NAME \
-                             --per_eq_tol $PER_EQ_TOL \
-                             --gbfs_results_dir $RESULTS_DIR_GBFS \
-                             --search_test_data $SEARCH_TEST_DATA \
-                             --search_itrs 100"
-
-CMD_VIZ_DATA="bash deepcubeai.sh --stage visualize_data \
-                                 --env $ENV \
-                                 --data_dir $DATA_DIR \
-                                 --data_file_name $DATA_FILE_NAME_TRAIN_VAL \
-                                 --num_train_trajs_viz 8 \
-                                 --num_train_steps_viz 2 \
-                                 --num_val_trajs_viz 8 \
-                                 --num_val_steps_viz 2"
-
-CMD_ENV_MODEL_TEST_PLOT="bash deepcubeai.sh --stage gen_env_test \
-                                            --env $ENV \
-                                            --data_dir $DATA_DIR \
-                                            --data_file_name $DATA_FILE_NAME_MODEL_TEST_PLOT \
-                                            --num_offline_steps 10_000 \
-                                            --num_test_eps 100 \
-                                            --num_cpus $NUM_CORES"
-
-CMD_DISC_VS_CONT="bash deepcubeai.sh --stage disc_vs_cont \
-                                     --env $ENV \
-                                     --data_dir $DATA_DIR \
-                                     --data_file_name $DATA_FILE_NAME_MODEL_TEST_PLOT \
-                                     --env_model_dir_disc $ENV_MODEL_DIR_DISC \
-                                     --env_model_dir_cont $ENV_MODEL_DIR_CONT \
-                                     --save_dir $PLOTS_SAVE_DIR \
-                                     --num_steps 10_000 \
-                                     --num_episodes 100 \
-                                     --print_interval 500"
+# CMD_UCS="python -m deepcubeai ucs \
+#                               --env $ENV \
+#                               --env_model_name $ENV_MODEL_NAME_DISC \
+#                               --ucs_batch_size $UCS_BATCH_SIZE \
+#                               --per_eq_tol $PER_EQ_TOL \
+#                               --ucs_results_dir $RESULTS_DIR_UCS \
+#                               --search_test_data $SEARCH_TEST_DATA \
+#                               --no_save_imgs"
 
 # gen_offline
 run_pipeline "$CMD_TRAIN_VAL"
@@ -203,15 +189,13 @@ run_pipeline "$CMD_TRAIN_VAL"
 # visualize_data
 run_pipeline "$CMD_VIZ_DATA"
 
-exit
-
 # gen_offline_test
 run_pipeline "$CMD_ENV_MODEL_TEST"
 
 # gen_offline_test (10K steps for plotting)
 run_pipeline "$CMD_ENV_MODEL_TEST_PLOT"
 
-# train_model
+# train_model_disc
 run_pipeline "$CMD_TRAIN_ENV_DISC"
 
 # test_model
@@ -232,11 +216,11 @@ run_pipeline "$CMD_ENCODE_OFFLINE"
 # train_heur
 run_pipeline "$CMD_TRAIN_HEUR"
 
+# gbfs
+run_pipeline "$CMD_GBFS"
+
 # qstar
 run_pipeline "$CMD_QSTAR"
 
 # # ucs
 # run_pipeline "$CMD_UCS"
-
-# gbfs
-run_pipeline "$CMD_GBFS"

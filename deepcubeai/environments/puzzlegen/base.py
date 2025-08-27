@@ -1,22 +1,47 @@
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
 import random
 
-import numpy as np
-from gym.spaces import Box, Discrete
+from gymnasium.spaces import Box, Discrete
+from numpy import uint8
+from numpy.typing import NDArray
 
 
-class PuzzleEnv:
+class PuzzleEnv(ABC):
+    """Base class for puzzle environments."""
 
-    def __init__(self,
-                 seed=None,
-                 size=8,
-                 render_style='grid_world',
-                 min_sol_len=1,
-                 max_tries=1000000):
+    seed: int | None
+    rng: random.Random
+    size: int
+    render_style: str
+    min_sol_len: int
+    max_tries: int
+    needs_reset: bool
+    is_closed: bool
+    grid: NDArray[uint8] | None
+    pos: tuple[int, int] | None
+    start: tuple[int, int] | None
+    end: tuple[int, int] | None
+    solution: list[int] | None
+    already_solved: bool | None
+    x: tuple[int, int, int, int]
+    y: tuple[int, int, int, int]
+    action_space: Discrete
+    observation_space: Box
 
+    def __init__(
+        self,
+        seed: int | None = None,
+        size: int = 8,
+        render_style: str = "grid_world",
+        min_sol_len: int = 1,
+        max_tries: int = 1000000,
+    ) -> None:
         self.x = (0, 1, -1, 0)
         self.y = (-1, 0, 0, 1)
         self.action_space = Discrete(5)
-        self.observation_space = Box(low=0, high=255, shape=(64, 64, 3), dtype="uint8")
+        self.observation_space = Box(low=0, high=255, shape=(64, 64, 3), dtype=uint8)
 
         self.seed = seed
         self.rng = random.Random(seed)
@@ -34,37 +59,41 @@ class PuzzleEnv:
         self.solution = None
         self.already_solved = None
 
-    def reset(self):
+    def reset(self) -> NDArray[uint8]:
+        """Reset the environment to initial state."""
         self.needs_reset = False
         self.rng = random.Random(self.seed)
         self.already_solved = False
         return self._reset()
 
-    def _reset(self):
-        raise NotImplementedError()
+    @abstractmethod
+    def _reset(self) -> NDArray[uint8]: ...
 
-    def step(self, a):
+    def step(self, a: int) -> tuple[float, bool, dict[str, int]]:
+        """Take a step in the environment with action a."""
         if self.needs_reset:
-            raise Exception('Environment needs to be reset.')
+            raise Exception("Environment needs to be reset.")
         if self.is_closed:
-            raise Exception('Environment is closed.')
+            raise Exception("Environment is closed.")
         assert isinstance(a, int)
         return self._step(a)
 
-    def _step(self, a):
-        raise NotImplementedError()
+    @abstractmethod
+    def _step(self, a: int) -> tuple[float, bool, dict[str, int]]: ...
 
-    def render(self, mode='human'):
+    def render(self, mode: str = "human") -> NDArray[uint8]:
+        """Render the environment."""
         if self.needs_reset:
-            raise Exception('Environment needs to be reset.')
+            raise Exception("Environment needs to be reset.")
         if self.is_closed:
-            raise Exception('Environment is closed.')
+            raise Exception("Environment is closed.")
         return self._get_image()
 
-    def _get_image(self):
-        raise NotImplementedError()
+    @abstractmethod
+    def _get_image(self) -> NDArray[uint8]: ...
 
-    def close(self):
+    def close(self) -> None:
+        """Close the environment."""
         if self.is_closed:
             return
         self.is_closed = True
@@ -75,19 +104,21 @@ class PuzzleEnv:
         self.solution = None
         self.already_solved = None
 
-    def seed(self, seed=None):
-        self.seed = seed
-
-    def get_solution(self):
+    def get_solution(self) -> list[int] | None:
+        """Get the solution path for the current puzzle state."""
         if self.needs_reset:
-            raise Exception('Environment needs to be reset.')
+            raise Exception("Environment needs to be reset.")
         if self.is_closed:
-            raise Exception('Environment is closed.')
+            raise Exception("Environment is closed.")
         return self.solution
 
-    def labels(self):
+    def labels(self) -> dict[str, int]:
+        """Get labels for the current state."""
         if self.needs_reset:
-            raise Exception('Environment needs to be reset.')
+            raise Exception("Environment needs to be reset.")
         if self.is_closed:
-            raise Exception('Environment is closed.')
-        return {"player_x": self.pos[0], "player_y": self.pos[1]}
+            raise Exception("Environment is closed.")
+        px, py = (0, 0)
+        if self.pos is not None:
+            px, py = self.pos
+        return {"player_x": px, "player_y": py}
