@@ -1,4 +1,4 @@
-name: Build Dist (Pixi + Hatch)
+name: Build
 
 on:
   workflow_call:

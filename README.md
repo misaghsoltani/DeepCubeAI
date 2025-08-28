@@ -1,24 +1,36 @@
 # DeepCubeAI
 
-This repository contains code for the paper [Learning Discrete World Models for Heuristic Search](https://rlj.cs.umass.edu/2024/papers/Paper225.html).
+[![Publication](https://img.shields.io/badge/publication-RLC-%234285F4?logo=googlescholar&logoColor=%23d0d0d0&cacheSeconds=https%3A%2F%2Frlj.cs.umass.edu%2F2024%2Fpapers%2FPaper225.html)](https://rlj.cs.umass.edu/2024/papers/Paper225.html)
+[![image](https://img.shields.io/pypi/v/deepcubeai.svg)](https://pypi.python.org/pypi/deepcubeai)
+[![image](https://img.shields.io/pypi/l/deepcubeai.svg)](https://github.com/misaghsoltani/DeepCubeAI/blob/main/LICENSE)
+[![Python Versions](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-%233776AB?logo=Python&logoColor=%23d0d0d0&link=https%3A%2F%2Fpypi.org%2Fproject%2Fdeepcubeai%2F)](https://pypi.org/project/deepcubeai) <br>
+[![Pixi Badge](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prefix-dev/pixi/main/assets/badge/v0.json&label=package%20manager)](https://pixi.sh)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Checked with Pyright](https://microsoft.github.io/pyright/img/pyright_badge.svg)](https://microsoft.github.io/pyright/)
+![Static Badge](https://img.shields.io/badge/statically%20typed-mypy-039dfc)
+[![Build & Publish](https://github.com/misaghsoltani/DeepCubeAI/actions/workflows/publish_to_pypi.yml/badge.svg)](https://github.com/misaghsoltani/DeepCubeAI/actions/workflows/publish_to_pypi.yml)
+
+<br>
+
+This repository contains the code for the paper [Learning Discrete World Models for Heuristic Search](https://rlj.cs.umass.edu/2024/papers/Paper225.html), accepted to the first Reinforcement Learning Conference (RLC - 2024).
 
 | ![Rubik's Cube solving animation](https://raw.githubusercontent.com/misaghsoltani/DeepCubeAI/master/images/dcai_rubiks_cube.gif) | ![Sokoban puzzle solving animation](https://raw.githubusercontent.com/misaghsoltani/DeepCubeAI/master/images/dcai_sokoban.gif) | ![Ice Slider puzzle solving animation](https://raw.githubusercontent.com/misaghsoltani/DeepCubeAI/master/images/dcai_iceslider.gif) | ![Digit Jump puzzle solving animation](https://raw.githubusercontent.com/misaghsoltani/DeepCubeAI/master/images/dcai_digitjump.gif) |
 | :------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------: |
 
 ## About DeepCubeAI
 
-DeepCubeAI is an algorithm that learns a discrete world model and employs Deep Reinforcement Learning methods to learn a heuristic function that generalizes over start and goal states. We then integrate the learned model and the learned heuristic function with heuristic search, such as Q* search, to solve sequential decision making problems. For more details, please refer to the [paper](https://rlj.cs.umass.edu/2024/papers/Paper225.html).
+DeepCubeAI is an algorithm that learns a discrete world model and employs Deep Reinforcement Learning methods to learn a heuristic function that generalizes over start and goal states. We then integrate the learned model and the learned heuristic function with heuristic search, such as Q* search, to solve sequential decision making problems. For more details, please refer to the paper. <!-- [paper](https://rlj.cs.umass.edu/2024/papers/Paper225.html). -->
 
 ## Quick links
 
 - Key contributions: [Key Contributions](#key-contributions)
 - Main results: [Main Results](#main-results)
-- Quick start: [Quick start](#quick-start)
+- Quick start: [Installing the package or from source](#quick-start)
 - Install: [docs/installation.md](https://github.com/misaghsoltani/DeepCubeAI/blob/main/docs/installation.md)
 - CLI reference: [docs/cli.md](https://github.com/misaghsoltani/DeepCubeAI/blob/main/docs/cli.md)
 - Stage-by-stage usage (all flags and paths): [docs/usage.md](https://github.com/misaghsoltani/DeepCubeAI/blob/main/docs/usage.md)
 - Reproduce the paper results: [docs/reproduce.md](https://github.com/misaghsoltani/DeepCubeAI/blob/main/docs/reproduce.md)
-- SLURM and Distributed training: [docs/qlearning_distributed.md](https://github.com/misaghsoltani/DeepCubeAI/blob/main/docs/qlearning_distributed.md)
+- Distributed training for Q-learning: [docs/qlearning_distributed.md](https://github.com/misaghsoltani/DeepCubeAI/blob/main/docs/qlearning_distributed.md)
 - Environments and integration: [docs/environments.md](https://github.com/misaghsoltani/DeepCubeAI/blob/main/docs/environments.md)
 - Python usage (API snippets): [docs/python_api.md](https://github.com/misaghsoltani/DeepCubeAI/blob/main/docs/python_api.md)
 - Citing the paper: [Citation](#citation)
@@ -44,7 +56,7 @@ DeepCubeAI is comprised of three key components:
 
 2. **Generalizable Heuristic Function**
 
-   - Utilizes Deep Q-Network (DQN) and hindsight experience replay (HER) to learn a heuristic function that generalizes over start and goal states.
+   - Utilizes Deep Q-Network (DQN) and hindsight experience replay (HER) to learn a goal-conditioned heuristic function that generalizes over start and goal states.
 
 3. **Optimized Search**
 
@@ -66,9 +78,9 @@ DeepCubeAI provides a Python package and CLI. You can install it from PyPI or bu
 >
 > You can find detailed installation instructions, including using Conda for environment management, in the [installation guide](https://github.com/misaghsoltani/DeepCubeAI/blob/main/docs/installation.md).
 
-### Install `deepcubeai` Package from PyPI with [uv](https://docs.astral.sh/uv/) (Recommended if Running as a Package)
+### Install `deepcubeai` Package from PyPI with `uv` (Recommended if Running as a Package)
 
-`deepcubeai` is available on PyPI and you can use the following commands to install it.
+`deepcubeai` is available on PyPI and you can use the following commands to install it using [uv](https://docs.astral.sh/uv/).
 
   1. **Install `uv`** from the official website: [Install uv](https://docs.astral.sh/uv/getting-started/installation/).
   2. Create and activate a virtual environment:
@@ -96,7 +108,7 @@ DeepCubeAI provides a Python package and CLI. You can install it from PyPI or bu
      uv pip install deepcubeai
      ```
 
-### Install from Source with Pixi (Recommended if Working from Source)
+### Install from Source with `Pixi` (Recommended if Working from Source)
 
 [Pixi](https://pixi.sh/) is a package management tool that provides fast, reproducible environments with support for Conda and PyPI dependencies. The `pixi.toml` and `pixi.lock` files define reproducible environments with exact dependency versions.
 
@@ -108,14 +120,34 @@ DeepCubeAI provides a Python package and CLI. You can install it from PyPI or bu
    cd DeepCubeAI
    ```
 
-3. **Enter the default environment** (first run performs dependency resolution):
+3. **Install the environment**: Install the environment of your choice (default is `default`):
+
+   ```bash
+   pixi install  # or: pixi install -e default
+
+   # Or the dev environment with additional dev dependencies:
+   pixi install -e dev
+   ```
+
+   You may also install all environments at once:
+
+   ```bash
+   pixi install --all
+   ```
+
+   > [!NOTE]
+   >
+   > There is also an environment named `all`, which installs all dependencies from every environment into a single environment. This differs from installing all environments separately.  
+   > - The command `pixi install -e all` installs the environment named `all`.  
+   > - The command `pixi install --all` installs each environment separately (i.e., `default`, `dev`, `build`, `glibc217`, `all`, and `cuda`).  
+
+4. **Enter the environment**: First run may perform dependency resolution if the environment is not already installed:
 
    ```bash
    pixi shell  # or: pixi shell -e default
 
-   # or
-
-   pixi install -e default # non-interactive solve only
+   # or for the dev environment:
+   pixi shell -e dev
    ```
 
 ### Running DeepCubeAI
@@ -126,9 +158,7 @@ For running the CLI use the following command to see the available options:
    # If already entered the environment with Pixi:
    deepcubeai --help  # or -h
 
-   # or
-
-   # Without entering the environment:
+   # or without entering the environment:
    pixi run deepcubeai --help  # or -h
    ```
 
@@ -142,7 +172,7 @@ print(deepcubeai.__version__)
 
 ## License
 
-MIT License - see [LICENSE](LICENSE).
+MIT License - see [LICENSE](https://github.com/misaghsoltani/DeepCubeAI/blob/main/LICENSE).
 
 ## Citation
 

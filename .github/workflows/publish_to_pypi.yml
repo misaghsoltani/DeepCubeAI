@@ -1,4 +1,4 @@
-name: Build & Publish (Pixi + Hatch + PyPI)
+name: Build & Publish
 
 # Triggers:
 #  * Push of a version tag starting with v (e.g. v1.2.3)
