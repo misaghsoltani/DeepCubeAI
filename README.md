@@ -3,16 +3,16 @@
 [![Publication](https://img.shields.io/badge/publication-RLC-%234285F4?logo=googlescholar&logoColor=%23d0d0d0&cacheSeconds=https%3A%2F%2Frlj.cs.umass.edu%2F2024%2Fpapers%2FPaper225.html)](https://rlj.cs.umass.edu/2024/papers/Paper225.html)
 [![image](https://img.shields.io/pypi/v/deepcubeai.svg)](https://pypi.python.org/pypi/deepcubeai)
 [![image](https://img.shields.io/pypi/l/deepcubeai.svg)](https://github.com/misaghsoltani/DeepCubeAI/blob/main/LICENSE)
-[![Python Versions](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-%233776AB?logo=Python&logoColor=%23d0d0d0&link=https%3A%2F%2Fpypi.org%2Fproject%2Fdeepcubeai%2F)](https://pypi.org/project/deepcubeai) <br>
+[![Python Versions](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-%233776AB?logo=Python&logoColor=%23d0d0d0&link=https%3A%2F%2Fpypi.org%2Fproject%2Fdeepcubeai%2F)](https://pypi.org/project/deepcubeai) <br/>
 [![Pixi Badge](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prefix-dev/pixi/main/assets/badge/v0.json&label=package%20manager)](https://pixi.sh)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with Pyright](https://microsoft.github.io/pyright/img/pyright_badge.svg)](https://microsoft.github.io/pyright/)
 ![Static Badge](https://img.shields.io/badge/statically%20typed-mypy-039dfc)
 [![Build & Publish](https://github.com/misaghsoltani/DeepCubeAI/actions/workflows/publish_to_pypi.yml/badge.svg)](https://github.com/misaghsoltani/DeepCubeAI/actions/workflows/publish_to_pypi.yml)
 
-<br>
+<br/>
 
-This repository contains the code for the paper [Learning Discrete World Models for Heuristic Search](https://rlj.cs.umass.edu/2024/papers/Paper225.html), accepted to the first Reinforcement Learning Conference (RLC - 2024).
+This repository contains the code for the paper [Learning Discrete World Models for Heuristic Search](https://rlj.cs.umass.edu/2024/papers/Paper225.html), accepted to the first Reinforcement Learning Conference (RLC 2024).
 
 | ![Rubik's Cube solving animation](https://raw.githubusercontent.com/misaghsoltani/DeepCubeAI/master/images/dcai_rubiks_cube.gif) | ![Sokoban puzzle solving animation](https://raw.githubusercontent.com/misaghsoltani/DeepCubeAI/master/images/dcai_sokoban.gif) | ![Ice Slider puzzle solving animation](https://raw.githubusercontent.com/misaghsoltani/DeepCubeAI/master/images/dcai_iceslider.gif) | ![Digit Jump puzzle solving animation](https://raw.githubusercontent.com/misaghsoltani/DeepCubeAI/master/images/dcai_digitjump.gif) |
 | :------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------: |
@@ -49,7 +49,7 @@ DeepCubeAI is comprised of three key components:
    - Prediction errors less than 0.5 are corrected by rounding.
    - Re-identifies states by comparing two binary vectors.
 
-   <br>
+   <br/>
 
    | ![DeepCubeAI discrete world model](https://raw.githubusercontent.com/misaghsoltani/DeepCubeAI/master/images/dcai_discrete_world_model.png) |
    | :----------------------------------------------------------------------------------------------------------------------------------------: |
@@ -75,7 +75,6 @@ DeepCubeAI is comprised of three key components:
 DeepCubeAI provides a Python package and CLI. You can install it from PyPI or build it from source. The package supports Python 3.10-3.12.
 
 > [!NOTE]
->
 > You can find detailed installation instructions, including using Conda for environment management, in the [installation guide](https://github.com/misaghsoltani/DeepCubeAI/blob/main/docs/installation.md).
 
 ### Install `deepcubeai` Package from PyPI with `uv` (Recommended if Running as a Package)
@@ -124,7 +123,7 @@ DeepCubeAI provides a Python package and CLI. You can install it from PyPI or bu
 
    ```bash
    pixi install  # or: pixi install -e default
-
+   
    # Or the dev environment with additional dev dependencies:
    pixi install -e dev
    ```
@@ -135,20 +134,20 @@ DeepCubeAI provides a Python package and CLI. You can install it from PyPI or bu
    pixi install --all
    ```
 
-   > [!NOTE]
-   >
-   > There is also an environment named `all`, which installs all dependencies from every environment into a single environment. This differs from installing all environments separately.  
-   > - The command `pixi install -e all` installs the environment named `all`.  
-   > - The command `pixi install --all` installs each environment separately (i.e., `default`, `dev`, `build`, `glibc217`, `all`, and `cuda`).  
-
 4. **Enter the environment**: First run may perform dependency resolution if the environment is not already installed:
 
    ```bash
    pixi shell  # or: pixi shell -e default
-
+   
    # or for the dev environment:
    pixi shell -e dev
    ```
+
+> [!NOTE]
+> There is also an environment named `all`, which installs all dependencies from every environment into a single environment. This differs from installing all environments separately.
+>
+> - The command `pixi install -e all` installs the environment named `all`.
+> - The command `pixi install --all` installs each environment separately (i.e., `default`, `dev`, `build`, `glibc217`, `all`, and `cuda`).
 
 ### Running DeepCubeAI
 

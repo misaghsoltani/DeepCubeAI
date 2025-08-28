@@ -20,7 +20,7 @@ export DCAI_NUM_OFFLINE_STEPS=100
 deepcubeai gen_offline --num_val_eps 1000 --env cube3
 ```
 
-> [!Note]
+> [!NOTE]
 >
 > - The prefix is `DCAI_` followed by the uppercase field name from `PipelineConfig` (for example `env_model_name` -> `DCAI_ENV_MODEL_NAME`).
 > - Values are parsed into the annotated type where possible (int, float, bool, Path-like, string). Unknown/extra keys in a JSON config are ignored.

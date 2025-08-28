@@ -55,7 +55,7 @@ bash reproduce_results/run_directly/reproduce_sokoban.sh
 bash reproduce_results/run_directly/reproduce_digitjump.sh
 ```
 
-> [!Note]
+> [!NOTE]
 >
 > - If your system has GPUs available, ensure GPUs are visible to the environment (e.g., drivers installed, CUDA_VISIBLE_DEVICES set properly).
 > - If a script fails due to missing saved models, point it to the correct folder under `saved_env_models/` or `saved_heur_models/` (edit the `.sh` script to adjust paths or pass the appropriate CLI flags).

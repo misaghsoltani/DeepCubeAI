@@ -129,6 +129,9 @@
             "allowed_elements": [
                 "br"
             ]
+        },
+        "MD029": {
+            "style": "one_or_ordered"
         }
     },
     "yaml.schemas": {

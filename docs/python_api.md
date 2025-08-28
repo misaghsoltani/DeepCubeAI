@@ -3,11 +3,9 @@
 This project exposes programmatic (Python) entrypoints for the main pipelines via small typed dataclasses and `run_*` functions. The examples below show how to import a config dataclass, construct it, then call the corresponding `run_*` function.
 
 > [!NOTE]
->
 > Each module mirrors the CLI flags. Config dataclasses expose the most common fields and provide a `from_json()` helper if you prefer JSON-based configs.
-
+<!-- new line -->
 > [!NOTE]
->
 > Some config fields named `env_model` or `env_dir` expect a model directory (for example `deepcubeai/saved_env_models/<name>`), not a single file. The modules will look for the expected state files inside that directory (e.g. `env_state_dict.pt`, `encoder_state_dict.pt`).
 
 ## Training - discrete environment model
