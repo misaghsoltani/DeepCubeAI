@@ -20,6 +20,66 @@ BUILTINS: dict[str, dict[str, str | None]] = {
     "cube3_triples": {"type": "builtin", "module": "deepcubeai.environments.cube3", "attr": "Cube3Triples"},
     "digitjump": {"type": "builtin", "module": "deepcubeai.environments.digit_jump", "attr": "DigitJumpEnvironment"},
     "iceslider": {"type": "builtin", "module": "deepcubeai.environments.ice_slider", "attr": "IceSliderEnvironment"},
+    "powderworld_easy": {
+        "type": "builtin",
+        "module": "deepcubeai.environments.powderworld_easy",
+        "attr": "PowderworldEasyEnvironment",
+    },
+    "powderworld_medium": {
+        "type": "builtin",
+        "module": "deepcubeai.environments.powderworld_easy",
+        "attr": "PowderworldMediumEnvironment",
+    },
+    "powderworld_hard": {
+        "type": "builtin",
+        "module": "deepcubeai.environments.powderworld_easy",
+        "attr": "PowderworldHardEnvironment",
+    },
+    "powderworld_easy_macro": {
+        "type": "builtin",
+        "module": "deepcubeai.environments.powderworld_easy_macro",
+        "attr": "PowderworldEasyMacroEnvironment",
+    },
+    "powderworld_easy_macro_learned": {
+        "type": "builtin",
+        "module": "deepcubeai.environments.powderworld_easy_macro",
+        "attr": "PowderworldEasyMacroLearnedEnvironment",
+    },
+    "powderworld_easy_macro_neural": {
+        "type": "builtin",
+        "module": "deepcubeai.environments.powderworld_easy_macro",
+        "attr": "PowderworldEasyMacroNeuralEnvironment",
+    },
+    "powderworld_medium_macro": {
+        "type": "builtin",
+        "module": "deepcubeai.environments.powderworld_easy_macro",
+        "attr": "PowderworldMediumMacroEnvironment",
+    },
+    "powderworld_medium_macro_learned": {
+        "type": "builtin",
+        "module": "deepcubeai.environments.powderworld_easy_macro",
+        "attr": "PowderworldMediumMacroLearnedEnvironment",
+    },
+    "powderworld_medium_macro_neural": {
+        "type": "builtin",
+        "module": "deepcubeai.environments.powderworld_easy_macro",
+        "attr": "PowderworldMediumMacroNeuralEnvironment",
+    },
+    "powderworld_hard_macro": {
+        "type": "builtin",
+        "module": "deepcubeai.environments.powderworld_easy_macro",
+        "attr": "PowderworldHardMacroEnvironment",
+    },
+    "powderworld_hard_macro_learned": {
+        "type": "builtin",
+        "module": "deepcubeai.environments.powderworld_easy_macro",
+        "attr": "PowderworldHardMacroLearnedEnvironment",
+    },
+    "powderworld_hard_macro_neural": {
+        "type": "builtin",
+        "module": "deepcubeai.environments.powderworld_easy_macro",
+        "attr": "PowderworldHardMacroNeuralEnvironment",
+    },
     "sokoban": {"type": "builtin", "module": "deepcubeai.environments.sokoban", "attr": "Sokoban"},
 }
 

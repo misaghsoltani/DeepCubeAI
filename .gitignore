@@ -1,5 +1,6 @@
 saved_env_models/
 saved_heur_models/
+deepcubeai/logs/
 *.DS_Store
 *._.DS_Store
 *.pyc
@@ -9,6 +10,7 @@ deepcubeai/environments/sokoban_data/goal_states.pkl
 dist/
 deepcubeai.egg-info/
 .pixi/*
+.venv/
 .build-debug
 *.conda
 .mypy_cache

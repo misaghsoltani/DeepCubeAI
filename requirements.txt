@@ -5,3 +5,5 @@ networkx>=3.5,<4
 opencv-python>=4.11.0.86,<5
 tensorboard>=2.20.0,<3
 gymnasium>=1.2.0,<2
+pillow>=10,<12
+imageio>=2.34,<3

@@ -3,7 +3,7 @@ channels:
   - https://prefix.dev/conda-forge
   - nodefaults
 dependencies:
-  - python >=3.10,<3.13
+  - python >=3.11,<3.13
   - ruff *
   - pyright >=1.1.403,<2
   - shellcheck >=0.10.0,<0.11
@@ -19,3 +19,5 @@ dependencies:
       - opencv-python>=4.11.0.86, <5
       - tensorboard>=2.20.0, <3
       - gymnasium>=1.2.0, <2
+      - pillow>=10, <12
+      - imageio>=2.34, <3

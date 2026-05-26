@@ -7,7 +7,7 @@ name = "deepcubeai"
 dynamic = ["version"]
 description = "Learning Discrete World Models for Heuristic Search"
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.11,<3.13"
 authors = [{ name = "Misagh Soltani", email = "msoltani@email.sc.edu" }]
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
@@ -46,6 +46,8 @@ dependencies = [
     "opencv-python>=4.11.0.86, <5",
     "tensorboard>=2.20.0, <3",
     "gymnasium>=1.2.0, <2",
+    "pillow>=10, <12",
+    "imageio>=2.34, <3",
 ]
 
 [project.urls]
